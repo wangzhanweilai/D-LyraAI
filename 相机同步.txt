@@ -1,0 +1,86 @@
+Lyra 的相机不是简单的 SpringArm，而是一套“相机组件 + 相机模式栈 + Gameplay Ability 覆盖”的系统。
+
+主要功能
+
+可切换、可混合的相机模式
+
+每种模式输出位置、旋转、控制器旋转和 FOV。
+支持 Linear、EaseIn、EaseOut、EaseInOut 四种混合曲线。
+新模式压入栈顶，过渡完成后自动移除底层旧模式。
+位置、旋转和 FOV 都参与平滑混合。
+实现：LyraCameraMode.cpp、LyraCameraMode.cpp
+默认相机与技能临时覆盖
+
+PawnData 配置默认相机模式。
+Gameplay Ability 可以临时切换相机，例如 ADS、死亡状态。
+Ability 结束时自动清除覆盖并恢复默认模式。
+实现：LyraHeroComponent.cpp、LyraGameplayAbility.cpp
+第三人称跟随相机
+
+根据视角 Pitch 曲线动态计算前后、左右和高度偏移。
+支持 CurveVector 资产和运行时三条 FloatCurve。
+限制垂直观察角度。
+当前资产包括普通、ADS 和死亡第三人称模式：
+CM_ThirdPerson.uasset
+CM_ThirdPersonADS.uasset
+CM_ThirdPerson_Death.uasset
+实现：LyraCameraMode_ThirdPerson.cpp
+蹲伏相机平滑过渡
+
+根据角色 CrouchedEyeHeight 计算高度差。
+使用 EaseInOut 平滑进入和退出蹲伏视角。
+实现：LyraCameraMode_ThirdPerson.cpp
+相机穿墙与遮挡处理
+
+从角色安全位置向期望相机位置执行 Sweep。
+中心探针负责硬碰撞，周围多个预测探针提前检测墙体。
+相机遇到障碍立即拉近，障碍消失后平滑拉远。
+支持世界和 Pawn 不同权重、检测间隔、碰撞半径。
+带 IgnoreCameraCollision 标签的 Actor 可被忽略。
+实现：LyraCameraMode_ThirdPerson.cpp
+瞄准状态与武器精度联动
+
+相机模式可携带 GameplayTag。
+武器根据 ADS 相机的混合权重，逐步应用瞄准散布加成。
+因此镜头尚未完全进入 ADS 时，武器精度也不会瞬间达到最高。
+实现：LyraRangedWeaponInstance.cpp
+俯视竞技场相机
+
+TopDownArena 插件提供固定角度俯视模式。
+根据竞技场边界尺寸和曲线计算相机高度，确保场地被完整框入。
+实现：LyraCameraMode_TopDownArenaCamera.cpp
+输入和相机设置
+
+分别处理鼠标和手柄观察输入。
+支持手柄普通/瞄准灵敏度、水平反转、垂直反转。
+ShooterCore 还包含手柄 Aim Assist 输入修正器。
+实现：LyraHeroComponent.cpp、LyraInputModifiers.cpp
+其他能力
+
+支持单帧 FOV Offset，适合冲刺、后坐力或临时缩放。
+输出 PostProcess 配置。
+XR 头部追踪时回退到 UE 原生相机处理。
+提供 showdebug camera 所需的模式栈、权重、碰撞对象信息。
+项目包含开火、受伤、治疗等 CameraShake 资产。
+当前未完成或值得注意的地方
+
+UI Camera 目前基本是预留接口：NeedsToUpdateViewTarget() 固定返回 false，UpdateViewTarget() 为空，LyraUICameraManagerComponent.cpp。
+AddFieldOfViewOffset() 已实现，但当前 C++ 中没有实际调用。
+GetBlendInfo() 注释说读取栈顶，但代码使用 CameraModeStack.Last()；由于真正栈顶是索引 0，这可能导致 ADS 标签和权重读取错误，LyraCameraMode.cpp。
+---------------------------------
+lyra项目相机实现了哪些功能按照D:\zhanwang\Projects\AICode\IO\相机功能详情.drawio标准，输出到新的文件中。
+参考 D:\zhanwang\Projects\AICode\IO\玩家移动详情.io，属性和方法分开，功能按调用逻辑，进行编号。
+使用UML中表现方式，标明各类之间的关系。
+
+将和ALyraPlayerController 的关系加入，
+优化结构，类是整体，便于连线和移动。各种连线，连到类的最好之底部，属性，方法的分清楚，最好在左侧或右侧。
+
+优化一下连线，类的继承主要是顶部连接到底部，其他关系主要是右侧连接到左侧。
+参照按照
+D:\zhanwang\Projects\AICode\UML图讲解.pdf 对Lyra相机类关系_UML.drawio 进行优化。
+---------------------------------
+TSubclassOf<ULyraCameraMode> ULyraHeroComponent::DetermineCameraMode() const
+
+ssh-keygen -t ed25519 -C "794145458@qq.com"
+
+

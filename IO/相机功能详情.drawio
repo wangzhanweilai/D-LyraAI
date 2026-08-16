@@ -1,0 +1,1148 @@
+<mxfile host="Electron" agent="Codex" pages="4">
+  <diagram id="px-camera-feature" name="相机功能详情 UML">
+    <mxGraphModel dx="2613" dy="1044" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;fontSize=28;fontStyle=1;align=center;verticalAlign=middle;" value="玩家相机功能流程 - 方法级 UML" vertex="1">
+          <mxGeometry height="45" width="1100" x="900" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend" parent="1" style="text;html=1;fontSize=14;align=center;verticalAlign=middle;fontColor=#666666;" value="蓝色：服务器交互、上传、接收与远端相机状态应用 | 实线：调用 | 虚线：事件/通知 | 前缀 + 编号：同一执行路径内的直接调用顺序" vertex="1">
+          <mxGeometry height="28" width="1700" x="620" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="call-notes" parent="1" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;align=left;verticalAlign=top;spacingTop=6;spacingLeft=8;" value="&lt;b&gt;调用编号说明&lt;/b&gt;&lt;br&gt;&lt;b&gt;C&lt;/b&gt; = 相机管理器生命周期 / 每帧更新 | &lt;b&gt;V&lt;/b&gt; = 本地视图与模式栈 | &lt;b&gt;P&lt;/b&gt; = 相机组件注册 | &lt;b&gt;N&lt;/b&gt; = 相机网络同步。&lt;br&gt;数字表示该独立路径中的直接调用顺序。&lt;br&gt;&lt;br&gt;&lt;b&gt;网络链 N1-N12&lt;/b&gt;：每帧缓存相机数据 → 策略检查变化 → 组装发送数据 → 网络管理器分发策略 → Lua 取得角色 RoleId → 构造协议 → 分发器发送 → 上传服务器 → 收到同步通知 → 路由 Lua → RoleId 解析组件句柄 → 应用远端相机状态。&lt;br&gt;&lt;br&gt;&lt;b&gt;边界&lt;/b&gt;：只描述玩家第三人称相机、模式栈、组件池及同步；不展开 Unreal 原生视图、剧情镜头、Viewport 或调试相机内部逻辑。&lt;br&gt;&lt;br&gt;&lt;b&gt;实现状态&lt;/b&gt;：CAMERA_SYNC_INFO_RESP 的 ReceiveFromServer 调用在 PXCameraNet.lua 中被注释；本图以实际启用的 CAMERA_SYNC_INFO_NOTIFY 远端同步路径为准。" vertex="1">
+          <mxGeometry height="250" width="810" x="2510" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="pcm-base" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="APXPlayerCameraManagerBase &lt;font color=&quot;#008000&quot;&gt;PXCamera C++&lt;/font&gt;" vertex="1">
+          <mxGeometry height="164" width="520" x="-361" y="159" as="geometry" />
+        </mxCell>
+        <mxCell id="pcm-base-f" parent="pcm-base" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="- PlayerController / ViewTarget" vertex="1">
+          <mxGeometry height="26" width="520" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="pcm-base-line" parent="pcm-base" style="line;strokeWidth=1;fillColor=none;" value="" vertex="1">
+          <mxGeometry height="8" width="520" y="52" as="geometry" />
+        </mxCell>
+        <mxCell id="pcm-init" parent="pcm-base" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ InitializeFor(PC)：注册到相机系统" vertex="1">
+          <mxGeometry height="26" width="520" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="pcm-update" parent="pcm-base" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ UpdateCamera(DeltaTime)：驱动相机系统更新" vertex="1">
+          <mxGeometry height="26" width="520" y="86" as="geometry" />
+        </mxCell>
+        <mxCell id="pcm-target" parent="pcm-base" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ SetViewTarget(Actor)：交给当前 Style" vertex="1">
+          <mxGeometry height="26" width="520" y="112" as="geometry" />
+        </mxCell>
+        <mxCell id="pcm-destroy" parent="pcm-base" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ Destroyed()：注销相机管理器" vertex="1">
+          <mxGeometry height="26" width="520" y="138" as="geometry" />
+        </mxCell>
+        <mxCell id="camera-manager" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="UPXCameraManager &lt;font color=&quot;#008000&quot;&gt;GameInstanceSubsystem&lt;/font&gt;" vertex="1">
+          <mxGeometry height="216" width="600" x="760" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="camera-manager-f" parent="camera-manager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="- DataManager / ObjectPool / NetManager / ComponentPool&lt;br&gt;- StyleManagers：每个 PlayerCameraManager 一个" vertex="1">
+          <mxGeometry height="52" width="600" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="camera-manager-line" parent="camera-manager" style="line;strokeWidth=1;fillColor=none;" value="" vertex="1">
+          <mxGeometry height="8" width="600" y="78" as="geometry" />
+        </mxCell>
+        <mxCell id="manager-init" parent="camera-manager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ Initialize()：创建数据、对象、网络和组件池" vertex="1">
+          <mxGeometry height="26" width="600" y="86" as="geometry" />
+        </mxCell>
+        <mxCell id="manager-register" parent="camera-manager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ RegisterPlayerCameraManager(PCM)：创建 StyleManager" vertex="1">
+          <mxGeometry height="26" width="600" y="112" as="geometry" />
+        </mxCell>
+        <mxCell id="manager-update" parent="camera-manager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ UpdateCamera(PCM, DeltaTime)：先组件池，后网络管理器" vertex="1">
+          <mxGeometry height="26" width="600" y="138" as="geometry" />
+        </mxCell>
+        <mxCell id="manager-unregister" parent="camera-manager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ UnregisterPlayerCameraManager(PCM)" vertex="1">
+          <mxGeometry height="26" width="600" y="164" as="geometry" />
+        </mxCell>
+        <mxCell id="manager-style" parent="camera-manager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ CreateStyleByID / CreateModifierByID：对象池分配句柄" vertex="1">
+          <mxGeometry height="26" width="600" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="component-pool" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="UPXCameraComponentPool &lt;font color=&quot;#008000&quot;&gt;PXCamera C++&lt;/font&gt;" vertex="1">
+          <mxGeometry height="190" width="590" x="1570" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="pool-f" parent="component-pool" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="- RegisteredComponents / CameraComponentInfoMap&lt;br&gt;- FPXCameraHandle：组件身份与缓存索引" vertex="1">
+          <mxGeometry height="52" width="590" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="pool-line" parent="component-pool" style="line;strokeWidth=1;fillColor=none;" value="" vertex="1">
+          <mxGeometry height="8" width="590" y="78" as="geometry" />
+        </mxCell>
+        <mxCell id="pool-register" parent="component-pool" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ RegisterCameraComponent(Component)：生成 Handle 并通知网络管理器" vertex="1">
+          <mxGeometry height="26" width="590" y="86" as="geometry" />
+        </mxCell>
+        <mxCell id="pool-update" parent="component-pool" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ UpdateCamera(PCM)：缓存控制旋转和 CameraCacheView" vertex="1">
+          <mxGeometry height="26" width="590" y="112" as="geometry" />
+        </mxCell>
+        <mxCell id="pool-handle" parent="component-pool" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ GetCameraComponentHandleFromActor(Actor)" vertex="1">
+          <mxGeometry height="26" width="590" y="138" as="geometry" />
+        </mxCell>
+        <mxCell id="pool-apply" parent="component-pool" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ SetNewCameraComponentInfo(Info)：写入远端状态" vertex="1">
+          <mxGeometry height="26" width="590" y="164" as="geometry" />
+        </mxCell>
+        <mxCell id="camera-component" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="UPXCameraComponent &lt;font color=&quot;#008000&quot;&gt;PXGameCore C++&lt;/font&gt;" vertex="1">
+          <mxGeometry height="164" width="570" x="-363" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="component-f" parent="camera-component" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="- CameraModeStack / FieldOfViewOffset&lt;br&gt;- DetermineCameraModeDelegate" vertex="1">
+          <mxGeometry height="52" width="570" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="component-line" parent="camera-component" style="line;strokeWidth=1;fillColor=none;" value="" vertex="1">
+          <mxGeometry height="8" width="570" y="78" as="geometry" />
+        </mxCell>
+        <mxCell id="component-register" parent="camera-component" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ OnRegister()：创建 CameraModeStack" vertex="1">
+          <mxGeometry height="26" width="570" y="86" as="geometry" />
+        </mxCell>
+        <mxCell id="component-view" parent="camera-component" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ GetCameraView(DeltaTime)：模式求值、同步控制旋转、输出视图" vertex="1">
+          <mxGeometry height="26" width="570" y="112" as="geometry" />
+        </mxCell>
+        <mxCell id="component-modes" parent="camera-component" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ UpdateCameraModes()：委托选择模式并压栈" vertex="1">
+          <mxGeometry height="26" width="570" y="138" as="geometry" />
+        </mxCell>
+        <mxCell id="mode-stack" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="UPXCameraModeStack &lt;font color=&quot;#008000&quot;&gt;PXGameCore C++&lt;/font&gt;" vertex="1">
+          <mxGeometry height="164" width="580" x="800" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="stack-f" parent="mode-stack" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="- CameraModeStack / CameraModeInstances&lt;br&gt;- bIsActive" vertex="1">
+          <mxGeometry height="52" width="580" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="stack-line" parent="mode-stack" style="line;strokeWidth=1;fillColor=none;" value="" vertex="1">
+          <mxGeometry height="8" width="580" y="78" as="geometry" />
+        </mxCell>
+        <mxCell id="stack-push" parent="mode-stack" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ PushCameraMode(Class)：复用/创建模式并置顶" vertex="1">
+          <mxGeometry height="26" width="580" y="86" as="geometry" />
+        </mxCell>
+        <mxCell id="stack-eval" parent="mode-stack" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ EvaluateStack(DeltaTime)：UpdateStack + BlendStack" vertex="1">
+          <mxGeometry height="26" width="580" y="112" as="geometry" />
+        </mxCell>
+        <mxCell id="stack-create" parent="mode-stack" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ GetCameraModeInstance(Class)：NewObject 并缓存" vertex="1">
+          <mxGeometry height="26" width="580" y="138" as="geometry" />
+        </mxCell>
+        <mxCell id="camera-mode" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="UPXCameraMode &lt;font color=&quot;#008000&quot;&gt;PXGameCore C++&lt;/font&gt;" vertex="1">
+          <mxGeometry height="138" width="590" x="1570" y="530" as="geometry" />
+        </mxCell>
+        <mxCell id="mode-f" parent="camera-mode" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="- Pivot / View / BlendAlpha / BlendWeight" vertex="1">
+          <mxGeometry height="26" width="590" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="mode-line" parent="camera-mode" style="line;strokeWidth=1;fillColor=none;" value="" vertex="1">
+          <mxGeometry height="8" width="590" y="52" as="geometry" />
+        </mxCell>
+        <mxCell id="mode-update" parent="camera-mode" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ UpdateCameraMode()：更新视图与混合权重" vertex="1">
+          <mxGeometry height="26" width="590" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="mode-view" parent="camera-mode" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ UpdateView()：目标 Actor 枢轴 / 俯仰限制 / FOV" vertex="1">
+          <mxGeometry height="26" width="590" y="86" as="geometry" />
+        </mxCell>
+        <mxCell id="mode-blend" parent="camera-mode" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ UpdateBlending()：线性或缓动混合" vertex="1">
+          <mxGeometry height="26" width="590" y="112" as="geometry" />
+        </mxCell>
+        <mxCell id="net-manager" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="UPXCameraNetManager &lt;font color=&quot;#6c8ebf&quot;&gt;C++ 网络管理器&lt;/font&gt;" vertex="1">
+          <mxGeometry height="190" width="620" x="-361" y="860" as="geometry" />
+        </mxCell>
+        <mxCell id="net-manager-f" parent="net-manager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="- ReplicateStrategyClasses / Instances&lt;br&gt;- OnCameraSendToServer / OnCameraReceiveFromServer" vertex="1">
+          <mxGeometry height="52" width="620" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="net-manager-line" parent="net-manager" style="line;strokeWidth=1;fillColor=none;strokeColor=#6c8ebf;" value="" vertex="1">
+          <mxGeometry height="8" width="620" y="78" as="geometry" />
+        </mxCell>
+        <mxCell id="net-init" parent="net-manager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ Initialize() / AddReplicateStrategy()：创建策略实例" vertex="1">
+          <mxGeometry height="26" width="620" y="86" as="geometry" />
+        </mxCell>
+        <mxCell id="net-update" parent="net-manager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ UpdateCamera()：调用所有策略 UpdateCamera" vertex="1">
+          <mxGeometry height="26" width="620" y="112" as="geometry" />
+        </mxCell>
+        <mxCell id="net-send" parent="net-manager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ SendToServer()：解析 Handle 并分发策略" vertex="1">
+          <mxGeometry height="26" width="620" y="138" as="geometry" />
+        </mxCell>
+        <mxCell id="net-receive" parent="net-manager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ ReceiveFromServer()：写组件池并分发策略" vertex="1">
+          <mxGeometry height="26" width="620" y="164" as="geometry" />
+        </mxCell>
+        <mxCell id="replicate-player" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="UPXCR_Player / UPXCharacterCR_Player &lt;font color=&quot;#6c8ebf&quot;&gt;C++ 策略 + Lua 扩展&lt;/font&gt;" vertex="1">
+          <mxGeometry height="190" width="660" x="900" y="850" as="geometry" />
+        </mxCell>
+        <mxCell id="strategy-f" parent="replicate-player" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="- CameraReplicationInfo：按 Handle 缓存上次发送状态&lt;br&gt;- NetManagerOwner" vertex="1">
+          <mxGeometry height="52" width="660" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="strategy-line" parent="replicate-player" style="line;strokeWidth=1;fillColor=none;strokeColor=#6c8ebf;" value="" vertex="1">
+          <mxGeometry height="8" width="660" y="78" as="geometry" />
+        </mxCell>
+        <mxCell id="strategy-update" parent="replicate-player" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ UpdateCamera()：比较缓存，相机变化时触发发送" vertex="1">
+          <mxGeometry height="26" width="660" y="86" as="geometry" />
+        </mxCell>
+        <mxCell id="strategy-send" parent="replicate-player" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ OnSendToServer()：Handle → 组件 → AWCharacter.RoleId" vertex="1">
+          <mxGeometry height="26" width="660" y="112" as="geometry" />
+        </mxCell>
+        <mxCell id="strategy-receive" parent="replicate-player" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ ReceiveFromServer()：缓存远端相机数据" vertex="1">
+          <mxGeometry height="26" width="660" y="138" as="geometry" />
+        </mxCell>
+        <mxCell id="strategy-gate" parent="replicate-player" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ CanSendInfo()：仅本地 ViewTarget 的有效 Handle" vertex="1">
+          <mxGeometry height="26" width="660" y="164" as="geometry" />
+        </mxCell>
+        <mxCell id="lua-net" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="PXCameraNet.lua &lt;font color=&quot;#6c8ebf&quot;&gt;Lua 协议适配&lt;/font&gt;" vertex="1">
+          <mxGeometry height="190" width="600" x="1807" y="875" as="geometry" />
+        </mxCell>
+        <mxCell id="lua-f" parent="lua-net" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="- CAMERA_SYNC_INFO_REQ / RESP / NOTIFY&lt;br&gt;- UEContextObj" vertex="1">
+          <mxGeometry height="52" width="600" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="lua-line" parent="lua-net" style="line;strokeWidth=1;fillColor=none;strokeColor=#6c8ebf;" value="" vertex="1">
+          <mxGeometry height="8" width="600" y="78" as="geometry" />
+        </mxCell>
+        <mxCell id="lua-send" parent="lua-net" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ OnSendCameraReq(RoleId, Info)：构造请求载荷" vertex="1">
+          <mxGeometry height="26" width="600" y="86" as="geometry" />
+        </mxCell>
+        <mxCell id="lua-notify" parent="lua-net" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ OnMoveCameraSyncInfoNotify()：解析远端状态" vertex="1">
+          <mxGeometry height="26" width="600" y="112" as="geometry" />
+        </mxCell>
+        <mxCell id="lua-resolve" parent="lua-net" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ ResolveCameraHandle()：RoleId → WCharacter → Handle" vertex="1">
+          <mxGeometry height="26" width="600" y="138" as="geometry" />
+        </mxCell>
+        <mxCell id="lua-register" parent="lua-net" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ ToClientFuncRegister()：注册 RESP / NOTIFY 回调" vertex="1">
+          <mxGeometry height="26" width="600" y="164" as="geometry" />
+        </mxCell>
+        <mxCell id="dispatcher" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="WNetDispatcher &lt;font color=&quot;#6c8ebf&quot;&gt;网络分发器&lt;/font&gt;" vertex="1">
+          <mxGeometry height="112" width="430" x="2734" y="870" as="geometry" />
+        </mxCell>
+        <mxCell id="dispatcher-f" parent="dispatcher" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="- HandlerMap：服务 + 协议 → 回调" vertex="1">
+          <mxGeometry height="26" width="430" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="dispatcher-line" parent="dispatcher" style="line;strokeWidth=1;fillColor=none;strokeColor=#6c8ebf;" value="" vertex="1">
+          <mxGeometry height="8" width="430" y="52" as="geometry" />
+        </mxCell>
+        <mxCell id="dispatcher-send" parent="dispatcher" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ Send(MOVE, CAMERA_SYNC_INFO_REQ)" vertex="1">
+          <mxGeometry height="26" width="430" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="dispatcher-recv" parent="dispatcher" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ Dispatch(CAMERA_SYNC_INFO_NOTIFY)" vertex="1">
+          <mxGeometry height="26" width="430" y="86" as="geometry" />
+        </mxCell>
+        <mxCell id="server" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=16;" value="&lt;b&gt;游戏服务器&lt;/b&gt;&lt;br&gt;接收 CAMERA_SYNC_INFO_REQ&lt;br&gt;广播 CAMERA_SYNC_INFO_NOTIFY" vertex="1">
+          <mxGeometry height="120" width="260" x="3396" y="720" as="geometry" />
+        </mxCell>
+        <mxCell id="e-c-register" edge="1" parent="1" source="pcm-init" style="endArrow=block;endFill=1;html=1;edgeStyle=entityRelationEdgeStyle;rounded=0;" target="manager-register" value="C1：InitializeFor 注册 PlayerCameraManager">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-c-net-register" edge="1" parent="1" source="manager-register" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#6c8ebf;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="net-init" value="C2：创建 StyleManager 并通知网络管理器">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1440" y="255" />
+              <mxPoint x="1440" y="447" />
+              <mxPoint x="564" y="447" />
+              <mxPoint x="564" y="959" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-c-update" edge="1" parent="1" source="pcm-update" style="endArrow=block;endFill=1;html=1;edgeStyle=entityRelationEdgeStyle;rounded=0;" target="manager-update" value="C3：每帧 UpdateCamera">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-c-pool" edge="1" parent="1" source="manager-update" style="endArrow=block;endFill=1;html=1;edgeStyle=entityRelationEdgeStyle;rounded=0;" target="pool-update" value="C4：先更新组件池相机缓存">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-p-register" edge="1" parent="1" source="pool-register" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#6c8ebf;libavoidRouting=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="net-init" value="P1：生成组件 Handle 并注册策略">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2176" y="229" />
+              <mxPoint x="2176" y="440" />
+              <mxPoint x="537" y="440" />
+              <mxPoint x="537" y="959" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-v-modes" edge="1" parent="1" source="component-view" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="component-modes" value="V1：更新模式选择委托">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="280" y="645" />
+              <mxPoint x="280" y="700" />
+              <mxPoint x="-379" y="700" />
+              <mxPoint x="-379" y="671" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-v-push" edge="1" parent="1" source="component-modes" style="endArrow=block;endFill=1;html=1;edgeStyle=entityRelationEdgeStyle;rounded=0;" target="stack-push" value="V2：选择模式并压入栈顶">
+          <mxGeometry relative="1" x="0.431" y="13" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-v-evaluate" edge="1" parent="1" source="component-view" style="endArrow=block;endFill=1;html=1;edgeStyle=entityRelationEdgeStyle;rounded=0;" target="stack-eval" value="V3：EvaluateStack 求值与混合">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-v-mode-update" edge="1" parent="1" source="stack-eval" style="endArrow=block;endFill=1;html=1;edgeStyle=entityRelationEdgeStyle;rounded=0;" target="mode-update" value="V4：更新各模式视图与混合权重">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-v-output" edge="1" parent="1" source="stack-eval" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;dashed=1;endFill=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.75;exitDx=0;exitDy=0;" target="component-view" value="V5：回填 Location / Rotation / FOV 为 DesiredView">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1396" y="651.5" />
+              <mxPoint x="1396" y="730" />
+              <mxPoint x="-400" y="730" />
+              <mxPoint x="-400" y="645" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-n-update" edge="1" parent="1" source="manager-update" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#6c8ebf;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="net-update" value="N1：每帧调用网络策略更新">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1420.04" y="280.96" />
+              <mxPoint x="1420.04" y="400" />
+              <mxPoint x="-499.96" y="400" />
+              <mxPoint x="-499.96" y="985.04" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-n-changed" edge="1" parent="1" source="net-update" style="endArrow=block;endFill=1;html=1;edgeStyle=entityRelationEdgeStyle;rounded=0;strokeColor=#6c8ebf;" target="strategy-update" value="N2：策略比较缓存，发现相机状态变化">
+          <mxGeometry relative="1" x="-0.6849" y="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-n-build" edge="1" parent="1" source="strategy-update" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#6c8ebf;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="net-send" value="N3：读取组件池信息并组装发送数据">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1620" y="949" />
+              <mxPoint x="1620" y="1110.04" />
+              <mxPoint x="-460" y="1110.04" />
+              <mxPoint x="-460" y="1011" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-n-strategy" edge="1" parent="1" source="net-send" style="endArrow=block;endFill=1;html=1;edgeStyle=entityRelationEdgeStyle;rounded=0;strokeColor=#6c8ebf;" target="strategy-send" value="N4：解析 ViewTarget Handle 并分发到策略">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-n-role" edge="1" parent="1" source="strategy-send" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#6c8ebf;" target="lua-send" value="N5：由组件所有者取得 AWCharacter.RoleId">
+          <mxGeometry relative="1" x="-0.0321" y="5" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-n-dispatch-send" edge="1" parent="1" source="lua-send" style="endArrow=block;endFill=1;html=1;edgeStyle=entityRelationEdgeStyle;rounded=0;strokeColor=#6c8ebf;" target="dispatcher-send" value="N6：构造 CAMERA_SYNC_INFO_REQ">
+          <mxGeometry relative="1" x="-0.3465" y="14" as="geometry">
+            <mxPoint x="-1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-n-server" edge="1" parent="1" source="dispatcher-send" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#6c8ebf;" target="server" value="N7：上传相机同步请求">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-n-notify" edge="1" parent="1" source="server" style="endArrow=block;dashed=1;endFill=0;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#6c8ebf;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="dispatcher-recv" value="N8：收到 CAMERA_SYNC_INFO_NOTIFY">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2660" y="780" />
+              <mxPoint x="2660" y="969" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-n-route" edge="1" parent="1" source="dispatcher-recv" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#6c8ebf;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" target="lua-notify" value="N9：分发器路由到 Lua 通知处理函数">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="3180" y="975.5" />
+              <mxPoint x="3180" y="1110" />
+              <mxPoint x="1740" y="1110" />
+              <mxPoint x="1740" y="993.5" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-n-resolve" edge="1" parent="1" source="lua-notify" style="endArrow=block;endFill=1;html=1;rounded=0;strokeColor=#6c8ebf;edgeStyle=orthogonalEdgeStyle;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.165;exitDx=0;exitDy=0;exitPerimeter=0;" target="lua-resolve" value="N10：RoleId 解析为 CameraComponent Handle">
+          <mxGeometry relative="1" x="0.0216" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="2407" y="990" />
+              <mxPoint x="2460" y="990" />
+              <mxPoint x="2460" y="1080.08" />
+              <mxPoint x="1764" y="1080.08" />
+              <mxPoint x="1764" y="1026" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-n-receive" edge="1" parent="1" source="lua-resolve" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#6c8ebf;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="net-receive" value="N11：调用网络管理器接收远端相机状态">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2440" y="1026" />
+              <mxPoint x="2440" y="1090" />
+              <mxPoint x="-420" y="1090" />
+              <mxPoint x="-420" y="1037" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-n-apply" edge="1" parent="1" source="net-receive" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#6c8ebf;libavoidRouting=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="pool-apply" value="N12：写入组件池，并缓存远端相机数据">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="530.04" y="1036.96" />
+              <mxPoint x="530.04" y="433.04" />
+              <mxPoint x="1465" y="433.04" />
+              <mxPoint x="1465" y="306.96" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="px-lobby-sex-to-name-camera" name="性别选择到起名 - 相机切换流程">
+    <mxGraphModel dx="1141" dy="667" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="lobby-title" parent="1" style="text;html=1;fontSize=28;fontStyle=1;align=center;verticalAlign=middle;" value="性别选择切换到起名 - 相机变化流程（方法级 UML）" vertex="1">
+          <mxGeometry height="45" width="1900" x="760" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="lobby-legend" parent="1" style="text;html=1;fontSize=14;align=center;verticalAlign=middle;fontColor=#666666;" value="实线：实际直接调用 | 虚线：事件、资产轨道或条件性关系 | 黄色：需要在 Level Sequence 资产中确认的镜头轨道 | 本页没有服务器交互" vertex="1">
+          <mxGeometry height="28" width="2180" x="620" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="lobby-notes" parent="1" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;align=left;verticalAlign=top;spacingTop=6;spacingLeft=8;" value="&lt;b&gt;调用编号说明&lt;/b&gt;&lt;br&gt;&lt;b&gt;L&lt;/b&gt; = 选性别完成后切换起名展示区域 | &lt;b&gt;S&lt;/b&gt; = 完成切换时的 Level Sequence 播放 | &lt;b&gt;V&lt;/b&gt; = 起名 Widget 的 ViewTarget 固定流程。数字表示同一路径中的直接调用顺序。&lt;br&gt;&lt;br&gt;&lt;b&gt;为什么相机会变化&lt;/b&gt;&lt;br&gt;1. 点击完成的真实 C++ 路径只切换 UI 可见性、复位预览角色朝向并播放 FinishedSequence，&lt;b&gt;未直接调用 FixedCamera / SetViewTargetWithBlend&lt;/b&gt;。&lt;br&gt;2. 因此切换瞬间的可见镜头运动来自 FinishedSequence 中配置的 CameraActor 或对象 Transform 轨道；C++ 只负责创建并播放序列，具体轨道内容需打开资产确认。&lt;br&gt;3. UPXLobbyGiveNameWidget 初始化或 UPXLobbySubsystem.FixedCamera 被触发时，会将 ViewTarget 设为 Tag=101 的 Actor；若当前目标已经是该 Actor，只是重新固定目标，不一定产生可见位移。Map_Lobby.umap 中 ViewTarget 设置Tag为101。&amp;nbsp;&lt;br&gt;&lt;br&gt;&lt;b&gt;关键事实&lt;/b&gt;：UPXLobbySelectSexWidget.GameNameWidget 的静态类型是 UUserWidget，源码没有证明它就是 UPXLobbyGiveNameWidget，也没有从 ShowGiveNameWidget 直接调用该类。图中以虚线表示“起名展示区域”与该类的资产/装配关系。" vertex="1">
+          <mxGeometry height="330" width="900" x="2440" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="lua-select" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="PXLobbySelectSexWidget.lua &lt;font color=&quot;#008000&quot;&gt;UnLua 绑定&lt;/font&gt;" vertex="1">
+          <mxGeometry height="112" width="580" x="80" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="lua-select-f" parent="lua-select" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="- FinishBtn.OnButtonBaseClicked 绑定" vertex="1">
+          <mxGeometry height="26" width="580" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="lua-select-line" parent="lua-select" style="line;strokeWidth=1;fillColor=none;" value="" vertex="1">
+          <mxGeometry height="8" width="580" y="52" as="geometry" />
+        </mxCell>
+        <mxCell id="lua-finish" parent="lua-select" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ OnClickedFinishBtn()：完成性别选择" vertex="1">
+          <mxGeometry height="26" width="580" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="lua-call-name" parent="lua-select" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ self:ShowGiveNameWidget()" vertex="1">
+          <mxGeometry height="26" width="580" y="86" as="geometry" />
+        </mxCell>
+        <mxCell id="select-widget" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="UPXLobbySelectSexWidget &lt;font color=&quot;#008000&quot;&gt;PXLobby C++&lt;/font&gt;" vertex="1">
+          <mxGeometry height="216" width="680" x="820" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="select-f" parent="select-widget" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="- GameNameWidget : UUserWidget&lt;br&gt;- SelectedSexWidget : UPanelWidget&lt;br&gt;- CurModelPawn / InitialRotation / FinishedSequence" vertex="1">
+          <mxGeometry height="52" width="680" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="select-line" parent="select-widget" style="line;strokeWidth=1;fillColor=none;" value="" vertex="1">
+          <mxGeometry height="8" width="680" y="78" as="geometry" />
+        </mxCell>
+        <mxCell id="select-show-name" parent="select-widget" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ ShowGiveNameWidget()：切换区域并启动完成序列" vertex="1">
+          <mxGeometry height="26" width="680" y="86" as="geometry" />
+        </mxCell>
+        <mxCell id="select-init" parent="select-widget" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ Initialize()：初次把 ViewTarget 指向 Tag=101" vertex="1">
+          <mxGeometry height="26" width="680" y="112" as="geometry" />
+        </mxCell>
+        <mxCell id="select-finished" parent="select-widget" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ OnFinishedSequence()：释放 SequencePlayer / Actor" vertex="1">
+          <mxGeometry height="26" width="680" y="138" as="geometry" />
+        </mxCell>
+        <mxCell id="select-no-camera" parent="select-widget" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontColor=#cc0000;fontStyle=2;" value="注：ShowGiveNameWidget 内没有 FixedCamera / SetViewTarget 调用" vertex="1">
+          <mxGeometry height="26" width="680" y="164" as="geometry" />
+        </mxCell>
+        <mxCell id="select-padding" parent="select-widget" style="text;strokeColor=none;fillColor=none;" value="" vertex="1">
+          <mxGeometry height="26" width="680" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="ui-panels" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="同一 SelectSex Widget 内的 UI 区域 &lt;font color=&quot;#008000&quot;&gt;WBP 注入属性&lt;/font&gt;" vertex="1">
+          <mxGeometry height="138" width="570" x="1710" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="panel-selected" parent="ui-panels" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="- SelectedSexWidget.SetVisibility(Collapsed)" vertex="1">
+          <mxGeometry height="26" width="570" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="panel-name" parent="ui-panels" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="- GameNameWidget.SetVisibility(Visible)" vertex="1">
+          <mxGeometry height="26" width="570" y="52" as="geometry" />
+        </mxCell>
+        <mxCell id="panel-fact" parent="ui-panels" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontColor=#666666;fontStyle=2;" value="- 静态类型为 UUserWidget，不证明实例类型" vertex="1">
+          <mxGeometry height="26" width="570" y="78" as="geometry" />
+        </mxCell>
+        <mxCell id="panel-end" parent="ui-panels" style="text;strokeColor=none;fillColor=none;" value="" vertex="1">
+          <mxGeometry height="26" width="570" y="104" as="geometry" />
+        </mxCell>
+        <mxCell id="sequence" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="FinishedSequence / ULevelSequencePlayer &lt;font color=&quot;#b45f06&quot;&gt;资产驱动的表现&lt;/font&gt;" vertex="1">
+          <mxGeometry height="164" width="680" x="820" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="seq-create" parent="sequence" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ CreateLevelSequencePlayer(World, FinishedSequence, KeepState)" vertex="1">
+          <mxGeometry height="26" width="680" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="seq-play" parent="sequence" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ Play()：驱动序列已配置的轨道" vertex="1">
+          <mxGeometry height="26" width="680" y="52" as="geometry" />
+        </mxCell>
+        <mxCell id="seq-bind" parent="sequence" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ OnFinished.AddDynamic(OnFinishedSequence)" vertex="1">
+          <mxGeometry height="26" width="680" y="78" as="geometry" />
+        </mxCell>
+        <mxCell id="seq-unknown" parent="sequence" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontColor=#b45f06;fontStyle=2;" value="- 是否含 CameraActor / Transform 轨道：需打开 FinishedSequence 资产确认" vertex="1">
+          <mxGeometry height="26" width="680" y="104" as="geometry" />
+        </mxCell>
+        <mxCell id="seq-end" parent="sequence" style="text;strokeColor=none;fillColor=none;" value="" vertex="1">
+          <mxGeometry height="26" width="680" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="camera-track" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=15;" value="Level Sequence 中的相机 / 角色 Transform 轨道&lt;br&gt;&lt;font color=&quot;#b45f06&quot;&gt;条件性：资产内容未由 C++ 源码证明&lt;/font&gt;" vertex="1">
+          <mxGeometry height="112" width="500" x="1770" y="500" as="geometry" />
+        </mxCell>
+        <mxCell id="give-name" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="UPXLobbyGiveNameWidget &lt;font color=&quot;#008000&quot;&gt;独立起名 Widget 路径&lt;/font&gt;" vertex="1">
+          <mxGeometry height="164" width="620" x="80" y="760" as="geometry" />
+        </mxCell>
+        <mxCell id="give-init" parent="give-name" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ Initialize()：调用 FixedCamera()" vertex="1">
+          <mxGeometry height="26" width="620" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="give-fixed" parent="give-name" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ FixedCamera()：记录旧 Target，查找 Tag=101" vertex="1">
+          <mxGeometry height="26" width="620" y="52" as="geometry" />
+        </mxCell>
+        <mxCell id="give-set-target" parent="give-name" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ PlayerController.SetViewTargetWithBlend(Actor101, 0)" vertex="1">
+          <mxGeometry height="26" width="620" y="78" as="geometry" />
+        </mxCell>
+        <mxCell id="give-source" parent="give-name" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontColor=#666666;" value="- 也可由 UPXLobbySubsystem.FixedCamera() 转调" vertex="1">
+          <mxGeometry height="26" width="620" y="104" as="geometry" />
+        </mxCell>
+        <mxCell id="give-end" parent="give-name" style="text;strokeColor=none;fillColor=none;" value="" vertex="1">
+          <mxGeometry height="26" width="620" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="actor101" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=15;" value="关卡 Actor（Tag = 101）&lt;br&gt;被选性别 Initialize 与 FixedCamera 作为 ViewTarget" vertex="1">
+          <mxGeometry height="100" width="430" x="920" y="790" as="geometry" />
+        </mxCell>
+        <mxCell id="camera-manager-path" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="APXPlayerCameraManagerBase / UPXCameraStyle&lt;br&gt;SetViewTarget → 当前 Style.OnSetViewTarget → Unreal 基类处理" vertex="1">
+          <mxGeometry height="138" width="650" x="1630" y="750" as="geometry" />
+        </mxCell>
+        <mxCell id="camera-manager-set" parent="camera-manager-path" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ APXPlayerCameraManagerBase::SetViewTarget(NewTarget)" vertex="1">
+          <mxGeometry height="26" width="650" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="camera-style-set" parent="camera-manager-path" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ ActiveStyle.SetViewTarget → OnSetViewTarget" vertex="1">
+          <mxGeometry height="26" width="650" y="52" as="geometry" />
+        </mxCell>
+        <mxCell id="camera-super" parent="camera-manager-path" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ Super::SetViewTarget：UE 外部关系端点" vertex="1">
+          <mxGeometry height="26" width="650" y="78" as="geometry" />
+        </mxCell>
+        <mxCell id="camera-manager-end" parent="camera-manager-path" style="text;strokeColor=none;fillColor=none;" value="" vertex="1">
+          <mxGeometry height="26" width="650" y="104" as="geometry" />
+        </mxCell>
+        <mxCell id="e-l1" edge="1" parent="1" source="lua-finish" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;" target="lua-call-name" value="L1：Lua 完成按钮回调">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-l2" edge="1" parent="1" source="lua-call-name" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;" target="select-show-name" value="L2：调用 C++ 蓝图可调用函数">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-l3-name" edge="1" parent="1" source="select-show-name" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;" target="panel-name" value="L3：显示起名区域">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-l3-sex" edge="1" parent="1" source="select-show-name" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;" target="panel-selected" value="L3：隐藏性别选择区域">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1600" y="230" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-s1" edge="1" parent="1" source="select-show-name" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#d6b656;" target="seq-create" value="S1：复位 CurModelPawn 初始朝向，创建序列播放器">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-s2" edge="1" parent="1" source="seq-create" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#d6b656;" target="seq-play" value="S2：Play 驱动序列轨道">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-s3" edge="1" parent="1" source="seq-play" style="endArrow=block;endFill=0;dashed=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#d6b656;" target="camera-track" value="S3：若资产绑定相机/Transform 轨道，画面随轨道变化">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-s4" edge="1" parent="1" source="seq-bind" style="endArrow=block;endFill=0;dashed=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#d6b656;" target="select-finished" value="S4：序列结束事件清理播放器和 Actor">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-assembly" edge="1" parent="1" source="panel-name" style="endArrow=open;endFill=0;dashed=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;fontColor=#666666;" target="give-name" value="资产/蓝图装配关系，非源码直接调用">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2400" y="350" />
+              <mxPoint x="2400" y="700" />
+              <mxPoint x="390" y="700" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-v1" edge="1" parent="1" source="give-init" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;" target="give-fixed" value="V1：Initialize 调用 FixedCamera">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-v2" edge="1" parent="1" source="give-fixed" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;" target="give-set-target" value="V2：按 Tag 查到 Actor101 后设为目标（BlendTime=0）">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-v3" edge="1" parent="1" source="give-set-target" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;" target="actor101" value="V3：ViewTarget 指向 Actor101">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-v4" edge="1" parent="1" source="give-set-target" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;" target="camera-manager-set" value="V4：PlayerCameraManager 转交当前 CameraStyle">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1450" y="820" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-v5" edge="1" parent="1" source="camera-manager-set" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;" target="camera-style-set" value="V5：Style 收到 ViewTarget 变更，随后 UE 基类处理">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-v6" edge="1" parent="1" source="camera-style-set" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;" target="camera-super" value="V6：调用 Unreal 原生 SetViewTarget（不展开）">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-baseline" edge="1" parent="1" source="select-init" style="endArrow=open;endFill=0;dashed=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;fontColor=#666666;" target="actor101" value="V0：选性别 Widget 初始化也把目标设为同一 Actor101">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1580" y="410" />
+              <mxPoint x="1140" y="410" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="LovgdEWN4k9okm7VUt-x" name="Camera Modifier 使用示例">
+    <mxGraphModel dx="2054" dy="1201" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="K3V64AmxISk0khs8Zgmk-1" parent="1" style="text;html=1;fontSize=28;fontStyle=1;align=center;verticalAlign=middle;" value="PXCamera 使用方式 - GA_Dash Camera Modifier 生命周期示例" vertex="1">
+          <mxGeometry height="45" width="2200" x="850" y="590" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-2" parent="1" style="text;html=1;fontSize=14;align=center;verticalAlign=middle;fontColor=#666666;" value="实线：源码中的直接调用 | 虚线：返回值、条件分支或延后清理 | 蓝色仅表示服务器交互：本示例完全本地执行，因此不使用蓝色节点 | Handle：跨调用保存相机对象身份，不保存对象指针" vertex="1">
+          <mxGeometry height="28" width="2810" x="550" y="640" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-3" parent="1" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;align=left;verticalAlign=top;spacingTop=6;spacingLeft=8;" value="&lt;b&gt;调用编号说明&lt;/b&gt;&lt;br&gt;&lt;b&gt;A&lt;/b&gt; = 添加/激活 Camera Modifier；&lt;b&gt;R&lt;/b&gt;&amp;nbsp;= 失活/移除 Camera Modifier。数字表示同一条执行路径的直接调用顺序；&lt;b&gt;T/F&lt;/b&gt; 表示 Handle 有效性分支。&lt;br&gt;&lt;br&gt;&lt;b&gt;文档与源码对照&lt;/b&gt;&lt;br&gt;文档以 GA_Dash 蓝图展示 AddDashCameraModifier 与 RemoveDashCameraModifier。当前接口正式名称为 ActiveCameraModifier / RemoveCameraModifier；文档中的 ActiveCameraModifer / RemoveCamerModifer 为旧拼写。&lt;br&gt;&lt;br&gt;&lt;b&gt;使用要点&lt;/b&gt;&lt;br&gt;AddCameraModifier 仅创建/加入队列并返回 Handle；必须显式调用 ActiveCameraModifier 才应用效果。移除时 NeedDeactiveFirst=true 会先非立即失活、标记 PendingRemove，再在后续状态完成时回收资源；最后应 ResetCameraHandle，避免持有旧 Handle。&lt;br&gt;&lt;br&gt;&lt;b&gt;边界&lt;/b&gt;&lt;br&gt;本页只说明文档给出的本地 GA_Dash Modifier 示例，不展开 DataTable 编辑、Style 创建/切换、相机同步或 Unreal 原生 CameraModifier 内部。" vertex="1">
+          <mxGeometry height="320" width="900" x="3560" y="690" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-4" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="GA_Dash &lt;font color=&quot;#008000&quot;&gt;文档中的 Blueprint 示例&lt;/font&gt;" vertex="1">
+          <mxGeometry height="190" width="600" x="300" y="730" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-5" parent="K3V64AmxISk0khs8Zgmk-4" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="- DashCameraModifier : FPXCameraHandle&lt;br&gt;- AddModifierParams : FAddModifierParams" vertex="1">
+          <mxGeometry height="52" width="600" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-6" parent="K3V64AmxISk0khs8Zgmk-4" style="line;strokeWidth=1;fillColor=none;" value="" vertex="1">
+          <mxGeometry height="8" width="600" y="78" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-7" parent="K3V64AmxISk0khs8Zgmk-4" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ AddDashCameraModifier()：冲刺开始时调用" vertex="1">
+          <mxGeometry height="26" width="600" y="86" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-8" parent="K3V64AmxISk0khs8Zgmk-4" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ RemoveDashCameraModifier()：冲刺结束时调用" vertex="1">
+          <mxGeometry height="26" width="600" y="112" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-9" parent="K3V64AmxISk0khs8Zgmk-4" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ GetActorInfo()：取得 PlayerController" vertex="1">
+          <mxGeometry height="26" width="600" y="138" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-10" parent="K3V64AmxISk0khs8Zgmk-4" style="text;strokeColor=none;fillColor=none;" value="" vertex="1">
+          <mxGeometry height="26" width="600" y="164" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-11" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="FPXCameraHandle &lt;font color=&quot;#008000&quot;&gt;值类型身份凭据&lt;/font&gt;" vertex="1">
+          <mxGeometry height="156" width="510" x="1008" y="593" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-12" parent="K3V64AmxISk0khs8Zgmk-11" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="- StyleHandle：当前激活 Style 的 Handle" vertex="1">
+          <mxGeometry height="26" width="510" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-13" parent="K3V64AmxISk0khs8Zgmk-11" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="- DashCameraModifier：持久保存的 Modifier Handle" vertex="1">
+          <mxGeometry height="26" width="510" y="52" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-14" parent="K3V64AmxISk0khs8Zgmk-11" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ IsValid()：快速检查内部有效性" vertex="1">
+          <mxGeometry height="26" width="510" y="78" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-15" parent="K3V64AmxISk0khs8Zgmk-11" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ Reset()：恢复为无效 Handle" vertex="1">
+          <mxGeometry height="26" width="510" y="104" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-16" parent="K3V64AmxISk0khs8Zgmk-11" style="text;strokeColor=none;fillColor=none;" value="" vertex="1">
+          <mxGeometry height="26" width="510" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-17" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="UPXCameraBlueprintFunctionLib &lt;font color=&quot;#008000&quot;&gt;Blueprint Function Library&lt;/font&gt;" vertex="1">
+          <mxGeometry height="208" width="710" x="1780" y="700" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-18" parent="K3V64AmxISk0khs8Zgmk-17" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ GetCurrentActiveStyle(PlayerController) : StyleHandle" vertex="1">
+          <mxGeometry height="26" width="710" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-19" parent="K3V64AmxISk0khs8Zgmk-17" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ IsCameraHandleValid(WorldContext, Handle, FastCheck)" vertex="1">
+          <mxGeometry height="26" width="710" y="52" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-20" parent="K3V64AmxISk0khs8Zgmk-17" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ AddCameraModifier(WorldContext, StyleHandle, Params) : ModifierHandle" vertex="1">
+          <mxGeometry height="26" width="710" y="78" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-21" parent="K3V64AmxISk0khs8Zgmk-17" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ ActiveCameraModifier(WorldContext, StyleHandle, ModifierHandle)" vertex="1">
+          <mxGeometry height="26" width="710" y="104" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-22" parent="K3V64AmxISk0khs8Zgmk-17" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ RemoveCameraModifier(WorldContext, StyleHandle, ModifierHandle, NeedDeactiveFirst) : bool" vertex="1">
+          <mxGeometry height="26" width="710" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-23" parent="K3V64AmxISk0khs8Zgmk-17" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ ResetCameraHandle(ref Handle)" vertex="1">
+          <mxGeometry height="26" width="710" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-24" parent="K3V64AmxISk0khs8Zgmk-17" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontColor=#666666;" value="- 每个 Modifier 操作先用 StyleHandle 解析 UPXCameraStyle" vertex="1">
+          <mxGeometry height="26" width="710" y="182" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-25" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="UPXCameraStyleManager &lt;font color=&quot;#008000&quot;&gt;每个 PlayerCameraManager 的 Style 管理器&lt;/font&gt;" vertex="1">
+          <mxGeometry height="104" width="620" x="2810" y="780" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-26" parent="K3V64AmxISk0khs8Zgmk-25" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ GetCurrentActiveStyle() : FPXCameraHandle" vertex="1">
+          <mxGeometry height="26" width="620" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-27" parent="K3V64AmxISk0khs8Zgmk-25" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ GetStyleByHandle(StyleHandle) : UPXCameraStyle" vertex="1">
+          <mxGeometry height="26" width="620" y="52" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-28" parent="K3V64AmxISk0khs8Zgmk-25" style="text;strokeColor=none;fillColor=none;" value="" vertex="1">
+          <mxGeometry height="26" width="620" y="78" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-29" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="UPXCameraStyle &lt;font color=&quot;#008000&quot;&gt;当前激活 Style&lt;/font&gt;" vertex="1">
+          <mxGeometry height="208" width="710" x="1780" y="1170" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-30" parent="K3V64AmxISk0khs8Zgmk-29" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ AddModifier(Params) : ModifierHandle" vertex="1">
+          <mxGeometry height="26" width="710" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-31" parent="K3V64AmxISk0khs8Zgmk-29" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="- Tags / BlockedTags / RemoveTags / Unique 检查后加入 Modifiers" vertex="1">
+          <mxGeometry height="26" width="710" y="52" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-32" parent="K3V64AmxISk0khs8Zgmk-29" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ ActiveModifier(Handle) ：定位目标并调用 Modifier.Active" vertex="1">
+          <mxGeometry height="26" width="710" y="78" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-33" parent="K3V64AmxISk0khs8Zgmk-29" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ RemoveModifier(Handle, NeedDeactive) ：失活或立即回收" vertex="1">
+          <mxGeometry height="26" width="710" y="104" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-34" parent="K3V64AmxISk0khs8Zgmk-29" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="- NeedDeactive=true：Modifier.Deactive(false) + PendingRemoveModifier" vertex="1">
+          <mxGeometry height="26" width="710" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-35" parent="K3V64AmxISk0khs8Zgmk-29" style="text;strokeColor=none;fillColor=none;" value="" vertex="1">
+          <mxGeometry height="26" width="710" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-36" parent="K3V64AmxISk0khs8Zgmk-29" style="text;strokeColor=none;fillColor=none;" value="" vertex="1">
+          <mxGeometry height="26" width="710" y="182" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-37" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="UPXCameraModifierBase &lt;font color=&quot;#008000&quot;&gt;Modifier 行为与效果&lt;/font&gt;" vertex="1">
+          <mxGeometry height="182" width="620" x="3399" y="1195" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-38" parent="K3V64AmxISk0khs8Zgmk-37" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ Active(Context)：准备数据、EnableModifier、OnActive" vertex="1">
+          <mxGeometry height="26" width="620" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-39" parent="K3V64AmxISk0khs8Zgmk-37" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ OnActive(Context)：应用 Modifier 配置的相机属性/表现" vertex="1">
+          <mxGeometry height="26" width="620" y="52" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-40" parent="K3V64AmxISk0khs8Zgmk-37" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ Deactive(bImmediate)：DisableModifier + OnDeactive" vertex="1">
+          <mxGeometry height="26" width="620" y="78" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-41" parent="K3V64AmxISk0khs8Zgmk-37" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ Update(Context)：Blend Alpha 变化时通知 Style" vertex="1">
+          <mxGeometry height="26" width="620" y="104" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-42" parent="K3V64AmxISk0khs8Zgmk-37" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontColor=#666666;" value="- FAddModifierParams 覆盖 Priority / Tags 等状态；属性由数据表定义" vertex="1">
+          <mxGeometry height="26" width="620" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-43" parent="K3V64AmxISk0khs8Zgmk-37" style="text;strokeColor=none;fillColor=none;" value="" vertex="1">
+          <mxGeometry height="26" width="620" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-44" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="添加并激活：文档 GA_Dash 的 AddDashCameraModifier 截图" vertex="1">
+          <mxGeometry height="182" width="1230" x="300" y="1040" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-45" parent="K3V64AmxISk0khs8Zgmk-44" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="A1：AddDashCameraModifier 读取已保存的 DashCameraModifier" vertex="1">
+          <mxGeometry height="26" width="1230" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-46" parent="K3V64AmxISk0khs8Zgmk-44" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="A2：IsCameraHandleValid(FastCheck=true) 检查旧 Handle" vertex="1">
+          <mxGeometry height="26" width="1230" y="52" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-47" parent="K3V64AmxISk0khs8Zgmk-44" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="A3F：无效时从 GetActorInfo 取得 PlayerController；A3T：有效时复用旧 ModifierHandle" vertex="1">
+          <mxGeometry height="26" width="1230" y="78" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-48" parent="K3V64AmxISk0khs8Zgmk-44" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="A4F：GetCurrentActiveStyle(PlayerController) 取得 StyleHandle" vertex="1">
+          <mxGeometry height="26" width="1230" y="104" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-49" parent="K3V64AmxISk0khs8Zgmk-44" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="A5F-A7F：AddCameraModifier → 保存返回 Handle；A8：ActiveCameraModifier 使其实际生效" vertex="1">
+          <mxGeometry height="26" width="1230" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-50" parent="K3V64AmxISk0khs8Zgmk-44" style="text;strokeColor=none;fillColor=none;" value="" vertex="1">
+          <mxGeometry height="26" width="1230" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-51" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" value="失活并移除：文档 GA_Dash 的 RemoveDashCameraModifier 截图" vertex="1">
+          <mxGeometry height="156" width="1230" x="300" y="1320" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-52" parent="K3V64AmxISk0khs8Zgmk-51" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="R1：RemoveDashCameraModifier 从 GetActorInfo 取得 PlayerController" vertex="1">
+          <mxGeometry height="26" width="1230" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-53" parent="K3V64AmxISk0khs8Zgmk-51" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="R2：GetCurrentActiveStyle(PlayerController) 取得当前 StyleHandle" vertex="1">
+          <mxGeometry height="26" width="1230" y="52" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-54" parent="K3V64AmxISk0khs8Zgmk-51" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="R3-R5：RemoveCameraModifier(NeedDeactiveFirst=true) 先失活并标记延后回收" vertex="1">
+          <mxGeometry height="26" width="1230" y="78" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-55" parent="K3V64AmxISk0khs8Zgmk-51" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="R6-R7：ResetCameraHandle(ref DashCameraModifier) 清除调用方保存的旧身份" vertex="1">
+          <mxGeometry height="26" width="1230" y="104" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-56" parent="K3V64AmxISk0khs8Zgmk-51" style="text;strokeColor=none;fillColor=none;" value="" vertex="1">
+          <mxGeometry height="26" width="1230" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-57" edge="1" parent="1" source="K3V64AmxISk0khs8Zgmk-7" style="endArrow=block;endFill=1;html=1;edgeStyle=entityRelationEdgeStyle;rounded=0;" target="K3V64AmxISk0khs8Zgmk-19" value="A1：蓝图入口">
+          <mxGeometry relative="1" x="-0.7705" y="13" as="geometry">
+            <mxPoint y="-1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-58" edge="1" parent="1" source="K3V64AmxISk0khs8Zgmk-19" style="endArrow=block;endFill=1;html=1;edgeStyle=entityRelationEdgeStyle;rounded=0;" target="K3V64AmxISk0khs8Zgmk-14" value="A2：检查 DashCameraModifier 是否仍有效">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-59" edge="1" parent="1" source="K3V64AmxISk0khs8Zgmk-14" style="endArrow=open;endFill=0;dashed=1;html=1;edgeStyle=entityRelationEdgeStyle;rounded=0;fontColor=#666666;" target="K3V64AmxISk0khs8Zgmk-21" value="A3T：有效则保留旧 Handle，直接进入 A8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-60" edge="1" parent="1" source="K3V64AmxISk0khs8Zgmk-14" style="endArrow=block;endFill=1;html=1;edgeStyle=entityRelationEdgeStyle;rounded=0;" target="K3V64AmxISk0khs8Zgmk-9" value="A3F：无效则获取 PlayerController">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-61" edge="1" parent="1" source="K3V64AmxISk0khs8Zgmk-9" style="endArrow=block;endFill=1;html=1;edgeStyle=entityRelationEdgeStyle;rounded=0;" target="K3V64AmxISk0khs8Zgmk-18" value="A4F：取得当前激活 Style 的 Handle">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-62" edge="1" parent="1" source="K3V64AmxISk0khs8Zgmk-18" style="endArrow=block;endFill=1;html=1;edgeStyle=entityRelationEdgeStyle;rounded=0;" target="K3V64AmxISk0khs8Zgmk-26" value="A5F：StyleManager 返回当前 StyleHandle">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-63" edge="1" parent="1" source="K3V64AmxISk0khs8Zgmk-26" style="endArrow=block;endFill=1;html=1;edgeStyle=entityRelationEdgeStyle;rounded=0;" target="K3V64AmxISk0khs8Zgmk-20" value="A6F：用 StyleHandle 添加 Modifier">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-64" edge="1" parent="1" source="K3V64AmxISk0khs8Zgmk-20" style="endArrow=block;endFill=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;" target="K3V64AmxISk0khs8Zgmk-30" value="A7F：解析 Style 并创建/加入 Modifier 队列">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2610" y="791" />
+              <mxPoint x="2610" y="1209" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-65" edge="1" parent="1" source="K3V64AmxISk0khs8Zgmk-30" style="endArrow=block;endFill=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;" target="K3V64AmxISk0khs8Zgmk-21" value="A8：返回 ModifierHandle，保存后显式激活">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2506" y="1209" />
+              <mxPoint x="2506" y="1050" />
+              <mxPoint x="1764" y="1050" />
+              <mxPoint x="1764" y="823.5" />
+            </Array>
+            <mxPoint x="2490" y="1140" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-66" edge="1" parent="1" source="K3V64AmxISk0khs8Zgmk-21" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;" target="K3V64AmxISk0khs8Zgmk-32" value="A9：Style.ActiveModifier(Handle)">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2690" y="817.03" />
+              <mxPoint x="2690" y="1261.03" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-67" edge="1" parent="1" source="K3V64AmxISk0khs8Zgmk-32" style="endArrow=block;endFill=1;html=1;edgeStyle=entityRelationEdgeStyle;rounded=0;" target="K3V64AmxISk0khs8Zgmk-38" value="A10：Modifier.Active → Enable + OnActive，效果开始生效">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-68" edge="1" parent="1" source="K3V64AmxISk0khs8Zgmk-8" style="endArrow=block;endFill=1;html=1;edgeStyle=entityRelationEdgeStyle;rounded=0;strokeColor=#b85450;" target="K3V64AmxISk0khs8Zgmk-18" value="R1：蓝图结束入口">
+          <mxGeometry relative="1" x="-0.8194" y="-2" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-69" edge="1" parent="1" source="K3V64AmxISk0khs8Zgmk-18" style="endArrow=block;endFill=1;html=1;edgeStyle=entityRelationEdgeStyle;rounded=0;strokeColor=#b85450;" target="K3V64AmxISk0khs8Zgmk-26" value="R2：取得当前 StyleHandle">
+          <mxGeometry relative="1" x="-0.7186" y="26" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-70" edge="1" parent="1" source="K3V64AmxISk0khs8Zgmk-26" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#b85450;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="K3V64AmxISk0khs8Zgmk-22" value="R3：传入 StyleHandle、ModifierHandle 与 NeedDeactiveFirst=true">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="3480" y="819" />
+              <mxPoint x="3480" y="1109" />
+              <mxPoint x="1670" y="1109" />
+              <mxPoint x="1670" y="843" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-71" edge="1" parent="1" source="K3V64AmxISk0khs8Zgmk-22" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#b85450;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="K3V64AmxISk0khs8Zgmk-33" value="R4：Style.RemoveModifier(Handle, true)">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2650.04" y="843" />
+              <mxPoint x="2650.04" y="1470.04" />
+              <mxPoint x="1690.04" y="1470.04" />
+              <mxPoint x="1690.04" y="1287" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-72" edge="1" parent="1" source="K3V64AmxISk0khs8Zgmk-33" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#b85450;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="K3V64AmxISk0khs8Zgmk-40" value="R5：先 Deactive(false)，加入 PendingRemoveModifier">
+          <mxGeometry relative="1" x="-0.1428" y="7" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-73" edge="1" parent="1" source="K3V64AmxISk0khs8Zgmk-22" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#b85450;exitX=1;exitY=0.75;exitDx=0;exitDy=0;" target="K3V64AmxISk0khs8Zgmk-23" value="R6：返回后 ResetCameraHandle 清除保存的旧 Handle">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2580" y="849.49" />
+              <mxPoint x="2580" y="1090" />
+              <mxPoint x="1700" y="1090" />
+              <mxPoint x="1700" y="869.03" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-74" edge="1" parent="1" source="K3V64AmxISk0khs8Zgmk-23" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#b85450;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="K3V64AmxISk0khs8Zgmk-15" value="R7：调用 Handle.Reset()">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2500" y="869.05" />
+              <mxPoint x="2500" y="930" />
+              <mxPoint x="990" y="930" />
+              <mxPoint x="990" y="710" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="K3V64AmxISk0khs8Zgmk-75" edge="1" parent="1" source="K3V64AmxISk0khs8Zgmk-40" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;fontColor=#666666;" target="K3V64AmxISk0khs8Zgmk-34" value="延后：Modifier 更新/Blend 完成后由 Style 回收资源">
+          <mxGeometry relative="1" x="0.5823" y="8" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="px-camera-style-detail" name="UPXCameraStyle 功能点与调用流程">
+    <mxGraphModel dx="1968" dy="1836" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="style-title" parent="1" style="text;html=1;fontSize=28;fontStyle=1;align=center;verticalAlign=middle;" value="UPXCameraStyle 功能点与调用流程" vertex="1">
+          <mxGeometry height="45" width="2000" x="720" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="style-legend" parent="1" style="text;html=1;fontSize=14;align=center;verticalAlign=middle;fontColor=#666666;" value="实线：源码中的直接调用 | 虚线：条件、返回或延后状态 | 编号前缀：S=激活/过渡，D=失活/结束，M=Modifier 管理，T=逐帧更新，V=视角目标 | 本页仅描述本地对象协作，不使用服务端蓝色" vertex="1">
+          <mxGeometry height="26" width="3000" x="250" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="style-note" parent="1" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;align=left;verticalAlign=top;spacingTop=6;spacingLeft=8;" value="&lt;b&gt;功能点&lt;/b&gt;&lt;br&gt;1. 样式队列：StyleManager 按 Tag、优先级与取消规则维护 ActivatedStyles，并选择下一活动样式。&lt;br&gt;2. 生命周期：Style 依次经历 Idle → Start → Active → Deactive → End；过渡完成才推进 Start/Deactive 的后续通知。&lt;br&gt;3. Modifier：Style 负责创建、Tag 冲突处理、优先级排序、激活、失活、延后回收与逐帧合成。&lt;br&gt;4. 过渡与回调：Transition/Modifier 通过 Handle 查回所属 Style，完成 Blend 后驱动状态机。&lt;br&gt;5. SetViewTarget 仅委派给子类/蓝图 OnSetViewTarget；基类默认不修改 ViewTarget。&lt;br&gt;&lt;br&gt;&lt;b&gt;边界&lt;/b&gt;&lt;br&gt;省略 Unreal 原生 Tick、对象创建及视图渲染内部，仅保留 PXCamera 层的入口与关系端点。" vertex="1">
+          <mxGeometry height="330" width="940" x="2340" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="sm" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=28;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="UPXCameraStyleManager" vertex="1">
+          <mxGeometry height="252" width="610" x="-115" y="59" as="geometry" />
+        </mxCell>
+        <mxCell id="sm-activate" parent="sm" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ ActivateCameraStyle(Parm)：校验、Tag/优先级仲裁、入队" vertex="1">
+          <mxGeometry height="26" width="610" y="28" as="geometry" />
+        </mxCell>
+        <mxCell id="sm-start" parent="sm" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ StartCameraStyle(Handle)：设置 CurrentActiveStyleHandle" vertex="1">
+          <mxGeometry height="26" width="610" y="54" as="geometry" />
+        </mxCell>
+        <mxCell id="sm-deactivate" parent="sm" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ DeactivateCameraStyle(Param) / DeactiveActiveStyle()" vertex="1">
+          <mxGeometry height="26" width="610" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="sm-started" parent="sm" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ StyleStartedNotify(Handle)：过渡入场完成后激活 Style" vertex="1">
+          <mxGeometry height="26" width="610" y="106" as="geometry" />
+        </mxCell>
+        <mxCell id="sm-deactivated" parent="sm" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ StyleDeactivatedNotify(Handle)：调用 Style.End()" vertex="1">
+          <mxGeometry height="26" width="610" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="sm-ended" parent="sm" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ StyleEndNotify(Handle)：复用 Idle 或 Destroy，并尝试下一个" vertex="1">
+          <mxGeometry height="26" width="610" y="158" as="geometry" />
+        </mxCell>
+        <mxCell id="sm-destroy" parent="sm" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ DestroyStyle(Handle) / TryStartNextStyle()" vertex="1">
+          <mxGeometry height="26" width="610" y="184" as="geometry" />
+        </mxCell>
+        <mxCell id="sm-end" parent="sm" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontColor=#666666;" value="ActivatedStyles / StyleMap：查找当前 Style、判定 Tag/优先级/取消规则" vertex="1">
+          <mxGeometry height="42" width="610" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="style" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=28;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="UPXCameraStyle：状态机、上下文与 Modifier 队列 Owner" vertex="1">
+          <mxGeometry height="470" width="850" x="730" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="style-ready" parent="style" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ ReadyForNextActive()：设 Idle，重置 Transition/Modifier" vertex="1">
+          <mxGeometry height="26" width="850" y="28" as="geometry" />
+        </mxCell>
+        <mxCell id="style-start" parent="style" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ Start()：Reset Context，状态=Start，准备 BlendIn 过渡" vertex="1">
+          <mxGeometry height="26" width="850" y="54" as="geometry" />
+        </mxCell>
+        <mxCell id="style-ensure-transition" parent="style" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ EnsureTransition()：按 DataID 创建/取得 Transition 并 Initialize" vertex="1">
+          <mxGeometry height="26" width="850" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="style-active" parent="style" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ Active()：CaptureCamera，ApplyModifiers，状态=Active" vertex="1">
+          <mxGeometry height="26" width="850" y="106" as="geometry" />
+        </mxCell>
+        <mxCell id="style-deactive" parent="style" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ Deactive(Params)：状态准备 BlendOut，DeactiveModifiers" vertex="1">
+          <mxGeometry height="26" width="850" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="style-end-life" parent="style" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ End()：Restore CachedInfo，状态=End，通知 Manager" vertex="1">
+          <mxGeometry height="26" width="850" y="158" as="geometry" />
+        </mxCell>
+        <mxCell id="style-transition-finish" parent="style" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ TransitionFinishNotify()：Start→Started 或 Deactive→Deactivated" vertex="1">
+          <mxGeometry height="26" width="850" y="184" as="geometry" />
+        </mxCell>
+        <mxCell id="style-tick" parent="style" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ Tick()：Transition.Update（若处于过渡）+ UpdateModifiers" vertex="1">
+          <mxGeometry height="26" width="850" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="style-notified" parent="style" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ NotifiedByModifier()：判定 Blend 结束，推进状态/延后回收" vertex="1">
+          <mxGeometry height="26" width="850" y="236" as="geometry" />
+        </mxCell>
+        <mxCell id="style-add" parent="style" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ AddModifier()：创建、Tag 冲突/唯一性、按优先级插入" vertex="1">
+          <mxGeometry height="26" width="850" y="262" as="geometry" />
+        </mxCell>
+        <mxCell id="style-active-mod" parent="style" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ ActiveModifier() / ApplyModifiers()：按优先级激活" vertex="1">
+          <mxGeometry height="26" width="850" y="288" as="geometry" />
+        </mxCell>
+        <mxCell id="style-remove" parent="style" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ RemoveModifier()：失活后 PendingRemove 或立即释放" vertex="1">
+          <mxGeometry height="26" width="850" y="314" as="geometry" />
+        </mxCell>
+        <mxCell id="style-view-target" parent="style" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ SetViewTarget() → OnSetViewTarget()：子类/蓝图可覆写" vertex="1">
+          <mxGeometry height="26" width="850" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="style-end" parent="style" style="text;strokeColor=none;fillColor=none;" value="" vertex="1">
+          <mxGeometry height="76" width="850" y="366" as="geometry" />
+        </mxCell>
+        <mxCell id="camera-manager" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=28;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" value="UPXCameraManager / UPXCameraObjectPool" vertex="1">
+          <mxGeometry height="228" width="600" x="1650" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="cm-transition" parent="camera-manager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ CreateTransitionByID(DataID)" vertex="1">
+          <mxGeometry height="26" width="600" y="28" as="geometry" />
+        </mxCell>
+        <mxCell id="cm-modifier" parent="camera-manager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ CreateModifierByID(DataID)" vertex="1">
+          <mxGeometry height="26" width="600" y="54" as="geometry" />
+        </mxCell>
+        <mxCell id="pool-find" parent="camera-manager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ FindCameraObjectByHandle(Handle)" vertex="1">
+          <mxGeometry height="26" width="600" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="pool-unregister" parent="camera-manager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ UnregisterCameraObjectByHandle(Handle)" vertex="1">
+          <mxGeometry height="26" width="600" y="106" as="geometry" />
+        </mxCell>
+        <mxCell id="cm-end" parent="camera-manager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontColor=#666666;" value="对象池负责 Handle→对象查询与资源回收" vertex="1">
+          <mxGeometry height="54" width="600" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="transition" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=28;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="UPXCameraTransition：过渡状态与完成回调" vertex="1">
+          <mxGeometry height="202" width="600" x="1650" y="460" as="geometry" />
+        </mxCell>
+        <mxCell id="transition-init" parent="transition" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ Initialize(OwnerStyle) / ReadyForNextActive()" vertex="1">
+          <mxGeometry height="26" width="600" y="28" as="geometry" />
+        </mxCell>
+        <mxCell id="transition-receive" parent="transition" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ ReceiveRelevent(Context)：准备 Blend，首次 Update" vertex="1">
+          <mxGeometry height="26" width="600" y="54" as="geometry" />
+        </mxCell>
+        <mxCell id="transition-update" parent="transition" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ Update(Context)：条件、初末位置 Modifier、Blend" vertex="1">
+          <mxGeometry height="26" width="600" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="transition-notify" parent="transition" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ NotifyStyleFinished() → Style.TransitionFinishNotify" vertex="1">
+          <mxGeometry height="26" width="600" y="106" as="geometry" />
+        </mxCell>
+        <mxCell id="transition-end" parent="transition" style="text;strokeColor=none;fillColor=none;" value="" vertex="1">
+          <mxGeometry height="44" width="600" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="runtime" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=28;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" value="运行时驱动 / Gameplay 或 Blueprint 调用方" vertex="1">
+          <mxGeometry height="176" width="610" x="50" y="610" as="geometry" />
+        </mxCell>
+        <mxCell id="runtime-tick" parent="runtime" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ 每帧：调用 Style.Tick(DeltaTime)" vertex="1">
+          <mxGeometry height="26" width="610" y="28" as="geometry" />
+        </mxCell>
+        <mxCell id="runtime-modifier" parent="runtime" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ Gameplay：请求 Add/Active/Remove Modifier" vertex="1">
+          <mxGeometry height="26" width="610" y="54" as="geometry" />
+        </mxCell>
+        <mxCell id="runtime-view" parent="runtime" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ 业务/子类：调用 SetViewTarget(NewViewTarget)" vertex="1">
+          <mxGeometry height="26" width="610" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="runtime-end" parent="runtime" style="text;strokeColor=none;fillColor=none;" value="" vertex="1">
+          <mxGeometry height="44" width="610" y="106" as="geometry" />
+        </mxCell>
+        <mxCell id="modifier" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=28;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#fce4d6;strokeColor=#d79b00;" value="UPXCameraModifierBase：具体相机效果与 Blend 状态" vertex="1">
+          <mxGeometry height="228" width="800" x="780" y="700" as="geometry" />
+        </mxCell>
+        <mxCell id="modifier-init" parent="modifier" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ Initialize(OwnerStyle)：绑定所属 Style" vertex="1">
+          <mxGeometry height="26" width="800" y="28" as="geometry" />
+        </mxCell>
+        <mxCell id="modifier-active" parent="modifier" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ Active(Context)：准备数据、EnableModifier、OnActive" vertex="1">
+          <mxGeometry height="26" width="800" y="54" as="geometry" />
+        </mxCell>
+        <mxCell id="modifier-deactive" parent="modifier" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ Deactive(Immediate)：DisableModifier、OnDeactive" vertex="1">
+          <mxGeometry height="26" width="800" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="modifier-update" parent="modifier" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;fontStyle=1;" value="+ Update(Context)：UpdateAlpha、OnUpdate、NotifyBlendState" vertex="1">
+          <mxGeometry height="26" width="800" y="106" as="geometry" />
+        </mxCell>
+        <mxCell id="modifier-notify" parent="modifier" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ NotifyBlendState()：通知 Transition 和所属 Style" vertex="1">
+          <mxGeometry height="26" width="800" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="modifier-end" parent="modifier" style="text;strokeColor=none;fillColor=none;" value="" vertex="1">
+          <mxGeometry height="44" width="800" y="158" as="geometry" />
+        </mxCell>
+        <mxCell id="view-hook" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=28;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="UPXCameraStyle 子类 / Blueprint 扩展点" vertex="1">
+          <mxGeometry height="110" width="600" x="1650" y="710" as="geometry" />
+        </mxCell>
+        <mxCell id="view-hook-method" parent="view-hook" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;whiteSpace=wrap;html=1;" value="+ OnSetViewTarget(NewViewTarget, Params)：可覆写；基类默认空实现" vertex="1">
+          <mxGeometry height="52" width="600" y="28" as="geometry" />
+        </mxCell>
+        <mxCell id="e-s1" edge="1" parent="1" source="sm-activate" style="endArrow=block;endFill=1;html=1;edgeStyle=entityRelationEdgeStyle;rounded=0;" target="style-ready" value="S1：校验通过后重置目标 Style">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-s2" edge="1" parent="1" source="sm-activate" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.25;exitDx=0;exitDy=0;" target="sm-start" value="S2：首个入队或前一 Style 结束后启动">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="560.05" y="93.48" />
+              <mxPoint x="560.05" y="4.05" />
+              <mxPoint x="-179.95" y="4.05" />
+              <mxPoint x="-179.95" y="126.05" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-s3" edge="1" parent="1" source="sm-start" style="endArrow=block;endFill=1;html=1;edgeStyle=entityRelationEdgeStyle;rounded=0;" target="style-start" value="S3：记录当前 Handle 后启动生命周期">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-s4" edge="1" parent="1" source="style-start" style="endArrow=block;endFill=1;html=1;edgeStyle=entityRelationEdgeStyle;rounded=0;" target="style-ensure-transition" value="S4：Start 时确保过渡对象存在">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-s5" edge="1" parent="1" source="style-ensure-transition" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;" target="cm-transition" value="S5：按 TransitionDataID 创建 Transition">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-s6" edge="1" parent="1" source="cm-transition" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;" target="pool-find" value="S6：用返回 Handle 从对象池取对象">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-s7" edge="1" parent="1" source="pool-find" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;" target="transition-init" value="S7：绑定 OwnerStyle 并接收初始 Context">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-s8" edge="1" parent="1" source="transition-init" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;" target="transition-receive" value="S8：Start 后驱动 BlendIn 的首次更新">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-s9" edge="1" parent="1" source="transition-notify" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;" target="style-transition-finish" value="S9：完成时回调 Style 状态机">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-s10" edge="1" parent="1" source="style-transition-finish" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;" target="sm-started" value="S10：Start 完成后通知 Manager">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-s11" edge="1" parent="1" source="sm-started" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;" target="style-active" value="S11：Manager 令 Style 进入 Active">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-s12" edge="1" parent="1" source="style-active" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;" target="style-active-mod" value="S12：激活已有 Modifier 并应用初始效果">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-d1" edge="1" parent="1" source="sm-deactivate" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#b85450;" target="sm-end" value="D1：定位当前活动 Style 并计算失活规则">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-d2" edge="1" parent="1" source="sm-deactivate" style="endArrow=block;endFill=1;html=1;edgeStyle=entityRelationEdgeStyle;rounded=0;strokeColor=#b85450;" target="style-deactive" value="D2：传入 Ignore Blend/EndType 等参数">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-d3" edge="1" parent="1" source="style-deactive" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#b85450;" target="modifier-deactive" value="D3：对所有 Modifier 标记并开始失活">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-d4" edge="1" parent="1" source="modifier-notify" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#b85450;" target="style-notified" value="D4：BlendOut 完成后回报所属 Style">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-d5" edge="1" parent="1" source="style-notified" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#b85450;" target="transition-receive" value="D5：全部结束后准备 Transition BlendOut">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-d6" edge="1" parent="1" source="style-transition-finish" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#b85450;" target="sm-deactivated" value="D6：过渡完成再通知 Deactivated">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-d7" edge="1" parent="1" source="sm-deactivated" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#b85450;" target="style-end-life" value="D7：完整失活后恢复缓存相机信息">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-d8" edge="1" parent="1" source="style-end-life" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#b85450;" target="sm-ended" value="D8：End 后由 Manager 决定复用或销毁">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-d9" edge="1" parent="1" source="sm-ended" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#b85450;" target="style-ready" value="D9：IdleAfterEnd 时复位；DestroyAfterEnd 时销毁">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-d10" edge="1" parent="1" source="sm-destroy" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#b85450;" target="pool-unregister" value="D10：销毁时从对象池注销 Handle">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-m1" edge="1" parent="1" source="runtime-modifier" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#d79b00;" target="style-add" value="M1：业务请求向 Style 添加 Modifier">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-m2" edge="1" parent="1" source="style-add" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#d79b00;" target="cm-modifier" value="M2：按 ModifierDataID 创建对象">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-m3" edge="1" parent="1" source="cm-modifier" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#d79b00;" target="pool-find" value="M3：由 Handle 查回新 Modifier">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-m4" edge="1" parent="1" source="pool-find" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#d79b00;" target="modifier-init" value="M4：初始化并绑定 OwnerStyle">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-m5" edge="1" parent="1" source="modifier-init" style="endArrow=open;endFill=0;dashed=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;fontColor=#666666;" target="style-add" value="M5：通过 Blocked/Remove/Unique 后按优先级插入">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-m6" edge="1" parent="1" source="style-active-mod" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#d79b00;" target="modifier-active" value="M6：Style 显式/批量激活队列中的效果">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-m7" edge="1" parent="1" source="style-remove" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#d79b00;" target="modifier-deactive" value="M7：需要退出时先失活，必要时加入 PendingRemove">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-m8" edge="1" parent="1" source="style-notified" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#d79b00;" target="style-remove" value="M8：BlendOut 回调后以 NeedDeactive=false 实际回收">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-m9" edge="1" parent="1" source="style-remove" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#d79b00;" target="pool-unregister" value="M9：从队列删除、对象池注销并标记垃圾">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-t1" edge="1" parent="1" source="runtime-tick" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#666666;" target="style-tick" value="T1：运行时每帧进入 Style.Tick">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-t2" edge="1" parent="1" source="style-tick" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#666666;" target="transition-update" value="T2：过渡中才 Update Transition">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-t3" edge="1" parent="1" source="style-tick" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#666666;" target="modifier-update" value="T3：反向遍历已启用 Modifier 并更新">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-t4" edge="1" parent="1" source="modifier-update" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#666666;" target="modifier-notify" value="T4：Alpha 变化才发出 Blend 状态通知">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-t5" edge="1" parent="1" source="modifier-notify" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#666666;" target="transition-notify" value="T5：同时通知 Transition 与 Style，驱动后续状态">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-v1" edge="1" parent="1" source="runtime-view" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#9673a6;" target="style-view-target" value="V1：将目标与过渡参数交给 Style">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-v2" edge="1" parent="1" source="style-view-target" style="endArrow=open;endFill=0;dashed=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;fontColor=#666666;" target="view-hook-method" value="V2：调用可覆写 OnSetViewTarget；基类无默认实现">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1600" y="530" />
+              <mxPoint x="1600" y="760" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
