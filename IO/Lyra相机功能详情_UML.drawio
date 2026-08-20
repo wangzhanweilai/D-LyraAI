@@ -579,7 +579,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="lyra-camera-call-flow" name="相机输入、切换与视图调用链">
-    <mxGraphModel dx="1212" dy="746" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1048" dy="518" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="f0" />
         <mxCell id="f1" parent="f0" />
@@ -926,386 +926,405 @@
     </mxGraphModel>
   </diagram>
   <diagram id="lyra-thirdperson-status" name="第三人称功能与实现状态">
-    <mxGraphModel dx="2600" dy="1100" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1479" dy="732" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="s0" />
         <mxCell id="s1" parent="s0" />
         <mxCell id="s-title" parent="s1" style="text;html=1;fontSize=28;fontStyle=1;align=center;verticalAlign=middle;" value="Lyra Third-Person Camera - Feature Call Flow and Status" vertex="1">
-          <mxGeometry x="900" y="20" width="2000" height="45" as="geometry" />
+          <mxGeometry height="45" width="2000" x="900" y="20" as="geometry" />
         </mxCell>
         <mxCell id="s-legend" parent="s1" style="text;html=1;fontSize=14;align=center;verticalAlign=middle;fontColor=#666666;" value="T = 第三人称视图 | C = 蹲伏 | P = 防穿透 | A = Assist | O = 扩展模式 | 绿色：已实现 | 黄色：资产/部分接入 | 灰色：未实现 | 红色：疑似缺陷" vertex="1">
-          <mxGeometry x="520" y="70" width="2700" height="28" as="geometry" />
+          <mxGeometry height="28" width="2700" x="520" y="70" as="geometry" />
         </mxCell>
         <mxCell id="s-note" parent="s1" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;align=left;verticalAlign=top;spacingTop=6;spacingLeft=8;" value="&lt;b&gt;跟随实现&lt;/b&gt;&lt;br&gt;无 USpringArmComponent。每帧从 Pawn/Character 的位置、胶囊、眼高和 ViewRotation 重新计算 Pivot，再应用 Pitch 偏移曲线，因此角色移动和转向自然被跟随。&lt;br&gt;&lt;br&gt;&lt;b&gt;已实现平滑&lt;/b&gt;&lt;br&gt;模式切换、FOV、蹲伏高度、碰撞软回缩和障碍消失后的拉远。未实现通用 CameraLag、RotationLag、肩位切换或滚轮距离缩放。" vertex="1">
-          <mxGeometry x="3450" y="130" width="850" height="250" as="geometry" />
+          <mxGeometry height="250" width="850" x="3450" y="130" as="geometry" />
         </mxCell>
         <mxCell id="s-update" parent="s1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;resizeParent=1;resizeLast=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="ULyraCameraMode_ThirdPerson::UpdateView" vertex="1">
-          <mxGeometry x="80" y="140" width="700" height="346" as="geometry" />
+          <mxGeometry height="346" width="700" x="80" y="140" as="geometry" />
         </mxCell>
         <mxCell id="s-update-f-r1" parent="s-update" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- TargetOffsetCurve / RuntimeFloatCurves" vertex="1">
-          <mxGeometry y="26" width="700" height="26" as="geometry" />
+          <mxGeometry height="26" width="700" y="26" as="geometry" />
         </mxCell>
         <mxCell id="s-update-f-r2" parent="s-update" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- CurrentCrouchOffset" vertex="1">
-          <mxGeometry y="52" width="700" height="26" as="geometry" />
+          <mxGeometry height="26" width="700" y="52" as="geometry" />
         </mxCell>
         <mxCell id="s-update-f-r3" parent="s-update" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- View: FLyraCameraModeView" vertex="1">
-          <mxGeometry y="78" width="700" height="26" as="geometry" />
+          <mxGeometry height="26" width="700" y="78" as="geometry" />
         </mxCell>
         <mxCell id="s-update-line" parent="s-update" style="line;strokeWidth=1;fillColor=none;strokeColor=#82b366;" vertex="1">
-          <mxGeometry y="104" width="700" height="8" as="geometry" />
+          <mxGeometry height="8" width="700" y="104" as="geometry" />
         </mxCell>
         <mxCell id="s-update-m-r1" parent="s-update" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="T1 UpdateForTarget(DeltaTime)" vertex="1">
-          <mxGeometry y="112" width="700" height="26" as="geometry" />
+          <mxGeometry height="26" width="700" y="112" as="geometry" />
         </mxCell>
         <mxCell id="s-update-m-r2" parent="s-update" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="T2 UpdateCrouchOffset(DeltaTime)" vertex="1">
-          <mxGeometry y="138" width="700" height="26" as="geometry" />
+          <mxGeometry height="26" width="700" y="138" as="geometry" />
         </mxCell>
         <mxCell id="s-update-m-r3" parent="s-update" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="T3 PivotLocation = GetPivotLocation + CrouchOffset" vertex="1">
-          <mxGeometry y="164" width="700" height="26" as="geometry" />
+          <mxGeometry height="26" width="700" y="164" as="geometry" />
         </mxCell>
         <mxCell id="s-update-m-r4" parent="s-update" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="T4 PivotRotation = GetPivotRotation" vertex="1">
-          <mxGeometry y="190" width="700" height="26" as="geometry" />
+          <mxGeometry height="26" width="700" y="190" as="geometry" />
         </mxCell>
         <mxCell id="s-update-m-r5" parent="s-update" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="T5 Clamp Pitch" vertex="1">
-          <mxGeometry y="216" width="700" height="26" as="geometry" />
+          <mxGeometry height="26" width="700" y="216" as="geometry" />
         </mxCell>
         <mxCell id="s-update-m-r6" parent="s-update" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="T6 初始化 View + FieldOfView" vertex="1">
-          <mxGeometry y="242" width="700" height="26" as="geometry" />
+          <mxGeometry height="26" width="700" y="242" as="geometry" />
         </mxCell>
         <mxCell id="s-update-m-r7" parent="s-update" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="T7 Eval Pitch → Local TargetOffset" vertex="1">
-          <mxGeometry y="268" width="700" height="26" as="geometry" />
+          <mxGeometry height="26" width="700" y="268" as="geometry" />
         </mxCell>
         <mxCell id="s-update-m-r8" parent="s-update" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="T8 RotateVector(TargetOffset) 并更新 View.Location" vertex="1">
-          <mxGeometry y="294" width="700" height="26" as="geometry" />
+          <mxGeometry height="26" width="700" y="294" as="geometry" />
         </mxCell>
         <mxCell id="s-update-m-r9" parent="s-update" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="T9 UpdatePreventPenetration(DeltaTime)" vertex="1">
-          <mxGeometry y="320" width="700" height="26" as="geometry" />
+          <mxGeometry height="26" width="700" y="320" as="geometry" />
         </mxCell>
         <mxCell id="s-pivot" parent="s1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;resizeParent=1;resizeLast=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="ULyraCameraMode - Pivot" vertex="1">
-          <mxGeometry x="930" y="140" width="650" height="216" as="geometry" />
+          <mxGeometry height="216" width="650" x="930" y="140" as="geometry" />
         </mxCell>
         <mxCell id="s-pivot-f-r1" parent="s-pivot" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- TargetActor" vertex="1">
-          <mxGeometry y="26" width="650" height="26" as="geometry" />
+          <mxGeometry height="26" width="650" y="26" as="geometry" />
         </mxCell>
         <mxCell id="s-pivot-f-r2" parent="s-pivot" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- Character Capsule / CDO EyeHeight" vertex="1">
-          <mxGeometry y="52" width="650" height="26" as="geometry" />
+          <mxGeometry height="26" width="650" y="52" as="geometry" />
         </mxCell>
         <mxCell id="s-pivot-line" parent="s-pivot" style="line;strokeWidth=1;fillColor=none;strokeColor=#82b366;" vertex="1">
-          <mxGeometry y="78" width="650" height="8" as="geometry" />
+          <mxGeometry height="8" width="650" y="78" as="geometry" />
         </mxCell>
         <mxCell id="s-pivot-m-r1" parent="s-pivot" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="T3a Character：ActorLocation + CapsuleHeightAdjustment + BaseEyeHeight" vertex="1">
-          <mxGeometry y="86" width="650" height="26" as="geometry" />
+          <mxGeometry height="26" width="650" y="86" as="geometry" />
         </mxCell>
         <mxCell id="s-pivot-m-r2" parent="s-pivot" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="T3b Pawn：GetPawnViewLocation()" vertex="1">
-          <mxGeometry y="112" width="650" height="26" as="geometry" />
+          <mxGeometry height="26" width="650" y="112" as="geometry" />
         </mxCell>
         <mxCell id="s-pivot-m-r3" parent="s-pivot" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="T3c Actor：GetActorLocation()" vertex="1">
-          <mxGeometry y="138" width="650" height="26" as="geometry" />
+          <mxGeometry height="26" width="650" y="138" as="geometry" />
         </mxCell>
         <mxCell id="s-pivot-m-r4" parent="s-pivot" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="T4a Pawn：GetViewRotation()" vertex="1">
-          <mxGeometry y="164" width="650" height="26" as="geometry" />
+          <mxGeometry height="26" width="650" y="164" as="geometry" />
         </mxCell>
         <mxCell id="s-pivot-m-r5" parent="s-pivot" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="T4b Actor：GetActorRotation()" vertex="1">
-          <mxGeometry y="190" width="650" height="26" as="geometry" />
+          <mxGeometry height="26" width="650" y="190" as="geometry" />
         </mxCell>
         <mxCell id="s-crouch" parent="s1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;resizeParent=1;resizeLast=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="蹲伏高度平滑" vertex="1">
-          <mxGeometry x="1740" y="140" width="670" height="242" as="geometry" />
+          <mxGeometry height="242" width="670" x="1740" y="140" as="geometry" />
         </mxCell>
         <mxCell id="s-crouch-f-r1" parent="s-crouch" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- Initial / Target / CurrentCrouchOffset" vertex="1">
-          <mxGeometry y="26" width="670" height="26" as="geometry" />
+          <mxGeometry height="26" width="670" y="26" as="geometry" />
         </mxCell>
         <mxCell id="s-crouch-f-r2" parent="s-crouch" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- CrouchOffsetBlendPct / Multiplier" vertex="1">
-          <mxGeometry y="52" width="670" height="26" as="geometry" />
+          <mxGeometry height="26" width="670" y="52" as="geometry" />
         </mxCell>
         <mxCell id="s-crouch-line" parent="s-crouch" style="line;strokeWidth=1;fillColor=none;strokeColor=#82b366;" vertex="1">
-          <mxGeometry y="78" width="670" height="8" as="geometry" />
+          <mxGeometry height="8" width="670" y="78" as="geometry" />
         </mxCell>
         <mxCell id="s-crouch-m-r1" parent="s-crouch" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="C1 Character.IsCrouched()" vertex="1">
-          <mxGeometry y="86" width="670" height="26" as="geometry" />
+          <mxGeometry height="26" width="670" y="86" as="geometry" />
         </mxCell>
         <mxCell id="s-crouch-m-r2" parent="s-crouch" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="C2 OffsetZ = CrouchedEyeHeight - BaseEyeHeight" vertex="1">
-          <mxGeometry y="112" width="670" height="26" as="geometry" />
+          <mxGeometry height="26" width="670" y="112" as="geometry" />
         </mxCell>
         <mxCell id="s-crouch-m-r3" parent="s-crouch" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="C3 SetTargetCrouchOffset()" vertex="1">
-          <mxGeometry y="138" width="670" height="26" as="geometry" />
+          <mxGeometry height="26" width="670" y="138" as="geometry" />
         </mxCell>
         <mxCell id="s-crouch-m-r4" parent="s-crouch" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="C4 BlendPct += DeltaTime × Multiplier" vertex="1">
-          <mxGeometry y="164" width="670" height="26" as="geometry" />
+          <mxGeometry height="26" width="670" y="164" as="geometry" />
         </mxCell>
         <mxCell id="s-crouch-m-r5" parent="s-crouch" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="C5 InterpEaseInOut(Initial, Target, Pct)" vertex="1">
-          <mxGeometry y="190" width="670" height="26" as="geometry" />
+          <mxGeometry height="26" width="670" y="190" as="geometry" />
         </mxCell>
         <mxCell id="s-crouch-m-r6" parent="s-crouch" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="C6 站立时 Target = ZeroVector" vertex="1">
-          <mxGeometry y="216" width="670" height="26" as="geometry" />
+          <mxGeometry height="26" width="670" y="216" as="geometry" />
         </mxCell>
         <mxCell id="s-safe" parent="s1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;resizeParent=1;resizeLast=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="UpdatePreventPenetration - 安全点" vertex="1">
-          <mxGeometry x="80" y="620" width="760" height="346" as="geometry" />
+          <mxGeometry height="346" width="760" x="80" y="620" as="geometry" />
         </mxCell>
         <mxCell id="s-safe-f-r1" parent="s-safe" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- bPreventPenetration / bDoPredictiveAvoidance" vertex="1">
-          <mxGeometry y="26" width="760" height="26" as="geometry" />
+          <mxGeometry height="26" width="760" y="26" as="geometry" />
         </mxCell>
         <mxCell id="s-safe-f-r2" parent="s-safe" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- AimLineToDesiredPosBlockedPct" vertex="1">
-          <mxGeometry y="52" width="760" height="26" as="geometry" />
+          <mxGeometry height="26" width="760" y="52" as="geometry" />
         </mxCell>
         <mxCell id="s-safe-f-r3" parent="s-safe" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- ProtectionTarget / RootPrimitive" vertex="1">
-          <mxGeometry y="78" width="760" height="26" as="geometry" />
+          <mxGeometry height="26" width="760" y="78" as="geometry" />
         </mxCell>
         <mxCell id="s-safe-line" parent="s-safe" style="line;strokeWidth=1;fillColor=none;strokeColor=#82b366;" vertex="1">
-          <mxGeometry y="104" width="760" height="8" as="geometry" />
+          <mxGeometry height="8" width="760" y="104" as="geometry" />
         </mxCell>
         <mxCell id="s-safe-m-r1" parent="s-safe" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="P1 检查 bPreventPenetration" vertex="1">
-          <mxGeometry y="112" width="760" height="26" as="geometry" />
+          <mxGeometry height="26" width="760" y="112" as="geometry" />
         </mxCell>
         <mxCell id="s-safe-m-r2" parent="s-safe" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="A1 查询 Controller / TargetActor 的 Assist 接口" vertex="1">
-          <mxGeometry y="138" width="760" height="26" as="geometry" />
+          <mxGeometry height="26" width="760" y="138" as="geometry" />
         </mxCell>
         <mxCell id="s-safe-m-r3" parent="s-safe" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="A2 GetCameraPreventPenetrationTarget() 可替换保护目标" vertex="1">
-          <mxGeometry y="164" width="760" height="26" as="geometry" />
+          <mxGeometry height="26" width="760" y="164" as="geometry" />
         </mxCell>
         <mxCell id="s-safe-m-r4" parent="s-safe" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="P2 计算目标中心到相机 AimLine 的最近点" vertex="1">
-          <mxGeometry y="190" width="760" height="26" as="geometry" />
+          <mxGeometry height="26" width="760" y="190" as="geometry" />
         </mxCell>
         <mxCell id="s-safe-m-r5" parent="s-safe" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="P3 SafeLocation.Z 限制在碰撞胶囊内" vertex="1">
-          <mxGeometry y="216" width="760" height="26" as="geometry" />
+          <mxGeometry height="26" width="760" y="216" as="geometry" />
         </mxCell>
         <mxCell id="s-safe-m-r6" parent="s-safe" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="P4 GetSquaredDistanceToCollision() 贴合胶囊" vertex="1">
-          <mxGeometry y="242" width="760" height="26" as="geometry" />
+          <mxGeometry height="26" width="760" y="242" as="geometry" />
         </mxCell>
         <mxCell id="s-safe-m-r7" parent="s-safe" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="P5 向内部 PushIn，避免初始穿透" vertex="1">
-          <mxGeometry y="268" width="760" height="26" as="geometry" />
+          <mxGeometry height="26" width="760" y="268" as="geometry" />
         </mxCell>
         <mxCell id="s-safe-m-r8" parent="s-safe" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="P6 PreventCameraPenetration(SafeLoc, DesiredLoc)" vertex="1">
-          <mxGeometry y="294" width="760" height="26" as="geometry" />
+          <mxGeometry height="26" width="760" y="294" as="geometry" />
         </mxCell>
         <mxCell id="s-safe-m-r9" parent="s-safe" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="A3 低于阈值 → OnCameraPenetratingTarget()" vertex="1">
-          <mxGeometry y="320" width="760" height="26" as="geometry" />
+          <mxGeometry height="26" width="760" y="320" as="geometry" />
         </mxCell>
         <mxCell id="s-feeler" parent="s1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;resizeParent=1;resizeLast=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="FLyraPenetrationAvoidanceFeeler - 预测探针" vertex="1">
-          <mxGeometry x="1010" y="620" width="700" height="242" as="geometry" />
+          <mxGeometry height="242" width="700" x="1010" y="620" as="geometry" />
         </mxCell>
         <mxCell id="s-feeler-f-r1" parent="s-feeler" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- AdjustmentRot / Weight / Extent" vertex="1">
-          <mxGeometry y="26" width="700" height="26" as="geometry" />
+          <mxGeometry height="26" width="700" y="26" as="geometry" />
         </mxCell>
         <mxCell id="s-feeler-f-r2" parent="s-feeler" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- TraceInterval / FramesUntilNextTrace" vertex="1">
-          <mxGeometry y="52" width="700" height="26" as="geometry" />
+          <mxGeometry height="26" width="700" y="52" as="geometry" />
         </mxCell>
         <mxCell id="s-feeler-line" parent="s-feeler" style="line;strokeWidth=1;fillColor=none;strokeColor=#82b366;" vertex="1">
-          <mxGeometry y="78" width="700" height="8" as="geometry" />
+          <mxGeometry height="8" width="700" y="78" as="geometry" />
         </mxCell>
         <mxCell id="s-feeler-m-r1" parent="s-feeler" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="P7 中心探针：0°，Extent 14，Weight 1，逐帧" vertex="1">
-          <mxGeometry y="86" width="700" height="26" as="geometry" />
+          <mxGeometry height="26" width="700" y="86" as="geometry" />
         </mxCell>
         <mxCell id="s-feeler-m-r2" parent="s-feeler" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="P8 左右 ±16°：Weight .75，间隔 3 帧" vertex="1">
-          <mxGeometry y="112" width="700" height="26" as="geometry" />
+          <mxGeometry height="26" width="700" y="112" as="geometry" />
         </mxCell>
         <mxCell id="s-feeler-m-r3" parent="s-feeler" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="P9 左右 ±32°：Weight .5，间隔 5 帧" vertex="1">
-          <mxGeometry y="138" width="700" height="26" as="geometry" />
+          <mxGeometry height="26" width="700" y="138" as="geometry" />
         </mxCell>
         <mxCell id="s-feeler-m-r4" parent="s-feeler" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="P10 上 +20° / 下 -20°：间隔 4 帧" vertex="1">
-          <mxGeometry y="164" width="700" height="26" as="geometry" />
+          <mxGeometry height="26" width="700" y="164" as="geometry" />
         </mxCell>
         <mxCell id="s-feeler-m-r5" parent="s-feeler" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="P11 bDoPredictiveAvoidance=false：只用中心探针" vertex="1">
-          <mxGeometry y="190" width="700" height="26" as="geometry" />
+          <mxGeometry height="26" width="700" y="190" as="geometry" />
         </mxCell>
         <mxCell id="s-feeler-m-r6" parent="s-feeler" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="P12 命中后 FramesUntilNextTrace=0，下一帧复检" vertex="1">
-          <mxGeometry y="216" width="700" height="26" as="geometry" />
+          <mxGeometry height="26" width="700" y="216" as="geometry" />
         </mxCell>
         <mxCell id="s-sweep" parent="s1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;resizeParent=1;resizeLast=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="PreventCameraPenetration - Sweep 与回缩" vertex="1">
-          <mxGeometry x="1880" y="580" width="850" height="398" as="geometry" />
+          <mxGeometry height="398" width="850" x="1880" y="580" as="geometry" />
         </mxCell>
         <mxCell id="s-sweep-f-r1" parent="s-sweep" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- HardBlockedPct / SoftBlockedPct" vertex="1">
-          <mxGeometry y="26" width="850" height="26" as="geometry" />
+          <mxGeometry height="26" width="850" y="26" as="geometry" />
         </mxCell>
         <mxCell id="s-sweep-f-r2" parent="s-sweep" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- DistBlockedPctThisFrame" vertex="1">
-          <mxGeometry y="52" width="850" height="26" as="geometry" />
+          <mxGeometry height="26" width="850" y="52" as="geometry" />
         </mxCell>
         <mxCell id="s-sweep-f-r3" parent="s-sweep" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- CollisionPushOutDistance / BlendIn / BlendOut" vertex="1">
-          <mxGeometry y="78" width="850" height="26" as="geometry" />
+          <mxGeometry height="26" width="850" y="78" as="geometry" />
         </mxCell>
         <mxCell id="s-sweep-line" parent="s-sweep" style="line;strokeWidth=1;fillColor=none;strokeColor=#82b366;" vertex="1">
-          <mxGeometry y="104" width="850" height="8" as="geometry" />
+          <mxGeometry height="8" width="850" y="104" as="geometry" />
         </mxCell>
         <mxCell id="s-sweep-m-r1" parent="s-sweep" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="P13 按 AdjustmentRot 旋转 BaseRay" vertex="1">
-          <mxGeometry y="112" width="850" height="26" as="geometry" />
+          <mxGeometry height="26" width="850" y="112" as="geometry" />
         </mxCell>
         <mxCell id="s-sweep-m-r2" parent="s-sweep" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="P14 SweepSingleByChannel(ECC_Camera, Sphere)" vertex="1">
-          <mxGeometry y="138" width="850" height="26" as="geometry" />
+          <mxGeometry height="26" width="850" y="138" as="geometry" />
         </mxCell>
         <mxCell id="s-sweep-m-r3" parent="s-sweep" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="P15 忽略 ViewTarget" vertex="1">
-          <mxGeometry y="164" width="850" height="26" as="geometry" />
+          <mxGeometry height="26" width="850" y="164" as="geometry" />
         </mxCell>
         <mxCell id="s-sweep-m-r4" parent="s-sweep" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="P16 IgnoreCameraCollision Tag：忽略 Actor" vertex="1">
-          <mxGeometry y="190" width="850" height="26" as="geometry" />
+          <mxGeometry height="26" width="850" y="190" as="geometry" />
         </mxCell>
         <mxCell id="s-sweep-m-r5" parent="s-sweep" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="P17 目标前方 CameraBlockingVolume：忽略" vertex="1">
-          <mxGeometry y="216" width="850" height="26" as="geometry" />
+          <mxGeometry height="26" width="850" y="216" as="geometry" />
         </mxCell>
         <mxCell id="s-sweep-m-r6" parent="s-sweep" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="P18 命中比例扣除 CollisionPushOutDistance" vertex="1">
-          <mxGeometry y="242" width="850" height="26" as="geometry" />
+          <mxGeometry height="26" width="850" y="242" as="geometry" />
         </mxCell>
         <mxCell id="s-sweep-m-r7" parent="s-sweep" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="P19 中心探针 → HardBlockedPct：立即拉近" vertex="1">
-          <mxGeometry y="268" width="850" height="26" as="geometry" />
+          <mxGeometry height="26" width="850" y="268" as="geometry" />
         </mxCell>
         <mxCell id="s-sweep-m-r8" parent="s-sweep" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="P20 预测探针 → SoftBlockedPct：BlendIn 平滑拉近" vertex="1">
-          <mxGeometry y="294" width="850" height="26" as="geometry" />
+          <mxGeometry height="26" width="850" y="294" as="geometry" />
         </mxCell>
         <mxCell id="s-sweep-m-r9" parent="s-sweep" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="P21 障碍消失 → BlendOut 平滑拉远" vertex="1">
-          <mxGeometry y="320" width="850" height="26" as="geometry" />
+          <mxGeometry height="26" width="850" y="320" as="geometry" />
         </mxCell>
         <mxCell id="s-sweep-m-r10" parent="s-sweep" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="P22 CameraLoc = SafeLoc + Ray × DistBlockedPct" vertex="1">
-          <mxGeometry y="346" width="850" height="26" as="geometry" />
+          <mxGeometry height="26" width="850" y="346" as="geometry" />
         </mxCell>
         <mxCell id="s-sweep-m-r11" parent="s-sweep" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="P23 Debug 记录命中 Actor / Sphere / Line" vertex="1">
-          <mxGeometry y="372" width="850" height="26" as="geometry" />
+          <mxGeometry height="26" width="850" y="372" as="geometry" />
         </mxCell>
         <mxCell id="s-assist" parent="s1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;resizeParent=1;resizeLast=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="ILyraCameraAssistInterface - 接入状态" vertex="1">
-          <mxGeometry x="2920" y="580" width="720" height="190" as="geometry" />
+          <mxGeometry height="190" width="720" x="2920" y="580" as="geometry" />
         </mxCell>
         <mxCell id="s-assist-f" parent="s-assist" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- ControllerAssist / TargetActorAssist / PPActorAssist" vertex="1">
-          <mxGeometry y="26" width="720" height="26" as="geometry" />
+          <mxGeometry height="26" width="720" y="26" as="geometry" />
         </mxCell>
         <mxCell id="s-assist-line" parent="s-assist" style="line;strokeWidth=1;fillColor=none;strokeColor=#d6b656;" vertex="1">
-          <mxGeometry y="52" width="720" height="8" as="geometry" />
+          <mxGeometry height="8" width="720" y="52" as="geometry" />
         </mxCell>
         <mxCell id="s-assist-m-r1" parent="s-assist" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="A1 Cast 接口：已实现" vertex="1">
-          <mxGeometry y="60" width="720" height="26" as="geometry" />
+          <mxGeometry height="26" width="720" y="60" as="geometry" />
         </mxCell>
         <mxCell id="s-assist-m-r2" parent="s-assist" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="A2 GetCameraPreventPenetrationTarget：已调用" vertex="1">
-          <mxGeometry y="86" width="720" height="26" as="geometry" />
+          <mxGeometry height="26" width="720" y="86" as="geometry" />
         </mxCell>
         <mxCell id="s-assist-m-r3" parent="s-assist" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="A3 OnCameraPenetratingTarget：已调用" vertex="1">
-          <mxGeometry y="112" width="720" height="26" as="geometry" />
+          <mxGeometry height="26" width="720" y="112" as="geometry" />
         </mxCell>
         <mxCell id="s-assist-m-r4" parent="s-assist" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="A4 GetIgnoredActorsForCameraPentration：&lt;font color=&quot;#ff0000&quot;&gt;调用处仍为 TODO 注释&lt;/font&gt;" vertex="1">
-          <mxGeometry y="138" width="720" height="26" as="geometry" />
+          <mxGeometry height="26" width="720" y="138" as="geometry" />
         </mxCell>
         <mxCell id="s-assist-m-r5" parent="s-assist" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- 可扩展隐藏贴脸角色或更换保护主体" vertex="1">
-          <mxGeometry y="164" width="720" height="26" as="geometry" />
+          <mxGeometry height="26" width="720" y="164" as="geometry" />
         </mxCell>
         <mxCell id="s-topdown" parent="s1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;resizeParent=1;resizeLast=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="TopDownArena 相机模式" vertex="1">
-          <mxGeometry x="80" y="1210" width="720" height="190" as="geometry" />
+          <mxGeometry height="190" width="720" x="80" y="1210" as="geometry" />
         </mxCell>
         <mxCell id="s-topdown-f-r1" parent="s-topdown" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- ArenaWidth / ArenaHeight" vertex="1">
-          <mxGeometry y="26" width="720" height="26" as="geometry" />
+          <mxGeometry height="26" width="720" y="26" as="geometry" />
         </mxCell>
         <mxCell id="s-topdown-f-r2" parent="s-topdown" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- DefaultPivotRotation / BoundsSizeToDistance" vertex="1">
-          <mxGeometry y="52" width="720" height="26" as="geometry" />
+          <mxGeometry height="26" width="720" y="52" as="geometry" />
         </mxCell>
         <mxCell id="s-topdown-line" parent="s-topdown" style="line;strokeWidth=1;fillColor=none;strokeColor=#82b366;" vertex="1">
-          <mxGeometry y="78" width="720" height="8" as="geometry" />
+          <mxGeometry height="8" width="720" y="78" as="geometry" />
         </mxCell>
         <mxCell id="s-topdown-m-r1" parent="s-topdown" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="O1 构造固定 ArenaBounds" vertex="1">
-          <mxGeometry y="86" width="720" height="26" as="geometry" />
+          <mxGeometry height="26" width="720" y="86" as="geometry" />
         </mxCell>
         <mxCell id="s-topdown-m-r2" parent="s-topdown" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="O2 BoundsSizeToDistance.Eval(max size)" vertex="1">
-          <mxGeometry y="112" width="720" height="26" as="geometry" />
+          <mxGeometry height="26" width="720" y="112" as="geometry" />
         </mxCell>
         <mxCell id="s-topdown-m-r3" parent="s-topdown" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="O3 以固定旋转和场地中心计算 Loft Location" vertex="1">
-          <mxGeometry y="138" width="720" height="26" as="geometry" />
+          <mxGeometry height="26" width="720" y="138" as="geometry" />
         </mxCell>
         <mxCell id="s-topdown-m-r4" parent="s-topdown" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="O4 输出 Location / Rotation / ControlRotation / FOV" vertex="1">
-          <mxGeometry y="164" width="720" height="26" as="geometry" />
+          <mxGeometry height="26" width="720" y="164" as="geometry" />
         </mxCell>
         <mxCell id="s-assets" parent="s1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;resizeParent=1;resizeLast=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="CameraMode / Curve / CameraShake 资产" vertex="1">
-          <mxGeometry x="960" y="1190" width="790" height="216" as="geometry" />
+          <mxGeometry height="216" width="790" x="960" y="1190" as="geometry" />
         </mxCell>
         <mxCell id="s-assets-f-r1" parent="s-assets" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- CM_ThirdPerson / CM_ThirdPersonADS / CM_ThirdPerson_Death" vertex="1">
-          <mxGeometry y="26" width="790" height="26" as="geometry" />
+          <mxGeometry height="26" width="790" y="26" as="geometry" />
         </mxCell>
         <mxCell id="s-assets-f-r2" parent="s-assets" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- ThirdPersonOffset / ADSOffset / DeathOffset Curve" vertex="1">
-          <mxGeometry y="52" width="790" height="26" as="geometry" />
+          <mxGeometry height="26" width="790" y="52" as="geometry" />
         </mxCell>
         <mxCell id="s-assets-f-r3" parent="s-assets" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- CM_ArenaFramingCamera" vertex="1">
-          <mxGeometry y="78" width="790" height="26" as="geometry" />
+          <mxGeometry height="26" width="790" y="78" as="geometry" />
         </mxCell>
         <mxCell id="s-assets-f-r4" parent="s-assets" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- Fire / DamageTaken / Heal CameraShake" vertex="1">
-          <mxGeometry y="104" width="790" height="26" as="geometry" />
+          <mxGeometry height="26" width="790" y="104" as="geometry" />
         </mxCell>
         <mxCell id="s-assets-line" parent="s-assets" style="line;strokeWidth=1;fillColor=none;strokeColor=#d6b656;" vertex="1">
-          <mxGeometry y="130" width="790" height="8" as="geometry" />
+          <mxGeometry height="8" width="790" y="130" as="geometry" />
         </mxCell>
         <mxCell id="s-assets-m-r1" parent="s-assets" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="O5 Blueprint CameraMode 配置 FOV / Pitch / Blend / Offset" vertex="1">
-          <mxGeometry y="138" width="790" height="26" as="geometry" />
+          <mxGeometry height="26" width="790" y="138" as="geometry" />
         </mxCell>
         <mxCell id="s-assets-m-r2" parent="s-assets" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="O6 Ability 可通过 SetCameraMode 使用资产类" vertex="1">
-          <mxGeometry y="164" width="790" height="26" as="geometry" />
+          <mxGeometry height="26" width="790" y="164" as="geometry" />
         </mxCell>
         <mxCell id="s-assets-m-r3" parent="s-assets" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="&lt;font color=&quot;#ff0000&quot;&gt;CameraShake C++ 主链无 StartCameraShake 调用，可能由 Blueprint/GameplayCue 触发&lt;/font&gt;" vertex="1">
-          <mxGeometry y="190" width="790" height="26" as="geometry" />
+          <mxGeometry height="26" width="790" y="190" as="geometry" />
         </mxCell>
         <mxCell id="s-partial" parent="s1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;resizeParent=1;resizeLast=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="部分实现 / 风险" vertex="1">
-          <mxGeometry x="1930" y="1190" width="760" height="242" as="geometry" />
+          <mxGeometry height="242" width="760" x="1930" y="1190" as="geometry" />
         </mxCell>
         <mxCell id="s-partial-f-r1" parent="s-partial" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- UI Camera 自定义更新" vertex="1">
-          <mxGeometry y="26" width="760" height="26" as="geometry" />
+          <mxGeometry height="26" width="760" y="26" as="geometry" />
         </mxCell>
         <mxCell id="s-partial-f-r2" parent="s-partial" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- AddFieldOfViewOffset 调用" vertex="1">
-          <mxGeometry y="52" width="760" height="26" as="geometry" />
+          <mxGeometry height="26" width="760" y="52" as="geometry" />
         </mxCell>
         <mxCell id="s-partial-f-r3" parent="s-partial" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- Assist ignored actor list" vertex="1">
-          <mxGeometry y="78" width="760" height="26" as="geometry" />
+          <mxGeometry height="26" width="760" y="78" as="geometry" />
         </mxCell>
         <mxCell id="s-partial-f-r4" parent="s-partial" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- GetBlendInfo 栈顶读取" vertex="1">
-          <mxGeometry y="104" width="760" height="26" as="geometry" />
+          <mxGeometry height="26" width="760" y="104" as="geometry" />
         </mxCell>
         <mxCell id="s-partial-line" parent="s-partial" style="line;strokeWidth=1;fillColor=none;strokeColor=#d6b656;" vertex="1">
-          <mxGeometry y="130" width="760" height="8" as="geometry" />
+          <mxGeometry height="8" width="760" y="130" as="geometry" />
         </mxCell>
         <mxCell id="s-partial-m-r1" parent="s-partial" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- NeedsToUpdateViewTarget 恒 false；UpdateViewTarget 为空" vertex="1">
-          <mxGeometry y="138" width="760" height="26" as="geometry" />
+          <mxGeometry height="26" width="760" y="138" as="geometry" />
         </mxCell>
         <mxCell id="s-partial-m-r2" parent="s-partial" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- AddFieldOfViewOffset API 完成但无 C++ 调用者" vertex="1">
-          <mxGeometry y="164" width="760" height="26" as="geometry" />
+          <mxGeometry height="26" width="760" y="164" as="geometry" />
         </mxCell>
         <mxCell id="s-partial-m-r3" parent="s-partial" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- GetIgnoredActors... 声明但未调用" vertex="1">
-          <mxGeometry y="190" width="760" height="26" as="geometry" />
+          <mxGeometry height="26" width="760" y="190" as="geometry" />
         </mxCell>
         <mxCell id="s-partial-m-r4" parent="s-partial" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- GetBlendInfo 使用 Last()，与 index 0 为栈顶不一致，可能影响 ADS 散布联动" vertex="1">
-          <mxGeometry y="216" width="760" height="26" as="geometry" />
+          <mxGeometry height="26" width="760" y="216" as="geometry" />
         </mxCell>
         <mxCell id="s-missing" parent="s1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;resizeParent=1;resizeLast=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" value="当前未实现 / 未发现" vertex="1">
-          <mxGeometry x="2870" y="1180" width="800" height="190" as="geometry" />
+          <mxGeometry height="190" width="800" x="2870" y="1180" as="geometry" />
         </mxCell>
         <mxCell id="s-missing-f-r1" parent="s-missing" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- Hero Zoom 输入 / 滚轮距离缩放" vertex="1">
-          <mxGeometry y="26" width="800" height="26" as="geometry" />
+          <mxGeometry height="26" width="800" y="26" as="geometry" />
         </mxCell>
         <mxCell id="s-missing-f-r2" parent="s-missing" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- SpringArm / CameraLag / RotationLag" vertex="1">
-          <mxGeometry y="52" width="800" height="26" as="geometry" />
+          <mxGeometry height="26" width="800" y="52" as="geometry" />
         </mxCell>
         <mxCell id="s-missing-f-r3" parent="s-missing" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- 肩位切换 / 锁定目标相机" vertex="1">
-          <mxGeometry y="78" width="800" height="26" as="geometry" />
+          <mxGeometry height="26" width="800" y="78" as="geometry" />
         </mxCell>
         <mxCell id="s-missing-f-r4" parent="s-missing" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- 第一/第三人称专用运行时切换" vertex="1">
-          <mxGeometry y="104" width="800" height="26" as="geometry" />
+          <mxGeometry height="26" width="800" y="104" as="geometry" />
         </mxCell>
         <mxCell id="s-missing-f-r5" parent="s-missing" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="- Lyra 自定义相机网络同步" vertex="1">
-          <mxGeometry y="130" width="800" height="26" as="geometry" />
+          <mxGeometry height="26" width="800" y="130" as="geometry" />
         </mxCell>
         <mxCell id="s-missing-line" parent="s-missing" style="line;strokeWidth=1;fillColor=none;" vertex="1">
-          <mxGeometry y="156" width="800" height="8" as="geometry" />
+          <mxGeometry height="8" width="800" y="156" as="geometry" />
         </mxCell>
         <mxCell id="s-missing-m" parent="s-missing" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=5;whiteSpace=wrap;html=1;" value="&lt;i&gt;Aim Assist 是输入修正，不是锁定相机。ControlRotation 使用 UE 原生 Controller/Pawn 行为；模式栈、碰撞位置和偏移均在本地计算。&lt;/i&gt;" vertex="1">
-          <mxGeometry y="164" width="800" height="26" as="geometry" />
+          <mxGeometry height="26" width="800" y="164" as="geometry" />
         </mxCell>
-        <mxCell id="e-t-pivot" edge="1" parent="s1" source="s-update-m-r3" target="s-pivot-m-r1" value="T3-T4" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;">
+        <mxCell id="e-t-pivot" edge="1" parent="s1" source="s-update-m-r3" style="endArrow=block;endFill=1;html=1;edgeStyle=entityRelationEdgeStyle;rounded=0;" target="s-pivot-m-r1" value="T3-T4">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e-t-crouch" edge="1" parent="s1" source="s-update-m-r1" target="s-crouch-m-r1" value="T1-T2 / C1-C6" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;">
+        <mxCell id="e-t-crouch" edge="1" parent="s1" source="s-update-m-r1" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;" target="s-crouch-m-r1" value="T1-T2 / C1-C6">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="855" y="265.06" />
+              <mxPoint x="855" y="100" />
+              <mxPoint x="1660.06" y="100" />
+              <mxPoint x="1660.06" y="239.06" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-t-safe" edge="1" parent="s1" source="s-update-m-r9" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;libavoidRouting=1;" target="s-safe-m-r1" value="T9 / P1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="64" y="473" />
+              <mxPoint x="64" y="745" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-p-feeler" edge="1" parent="s1" source="s-safe-m-r6" style="endArrow=block;endFill=1;html=1;edgeStyle=entityRelationEdgeStyle;rounded=0;" target="s-feeler-m-r1" value="P6-P12">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e-t-safe" edge="1" parent="s1" source="s-update-m-r9" target="s-safe-m-r1" value="T9 / P1" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;">
+        <mxCell id="e-p-sweep" edge="1" parent="s1" source="s-feeler-m-r6" style="endArrow=block;endFill=1;html=1;rounded=0;edgeStyle=entityRelationEdgeStyle;" target="s-sweep-m-r1" value="P13-P23">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e-p-feeler" edge="1" parent="s1" source="s-safe-m-r6" target="s-feeler-m-r1" value="P6-P12" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="e-a-assist" edge="1" parent="s1" source="s-safe-m-r2" style="endArrow=block;endFill=0;dashed=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;libavoidRouting=1;" target="s-assist-m-r1" value="A1-A4">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="925" y="771" />
+              <mxPoint x="925" y="564" />
+              <mxPoint x="2825" y="564" />
+              <mxPoint x="2825" y="653" />
+            </Array>
+          </mxGeometry>
         </mxCell>
-        <mxCell id="e-p-sweep" edge="1" parent="s1" source="s-feeler-m-r6" target="s-sweep-m-r1" value="P13-P23" style="endArrow=block;endFill=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e-a-assist" edge="1" parent="s1" source="s-safe-m-r2" target="s-assist-m-r1" value="A1-A4" style="endArrow=block;endFill=0;dashed=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e-o-assets" edge="1" parent="s1" source="s-assets-m-r2" target="s-topdown-m-r1" value="O1-O6: config / class assets" style="endArrow=block;endFill=0;dashed=1;html=1;edgeStyle=orthogonalEdgeStyle;rounded=0;">
+        <mxCell id="e-o-assets" edge="1" parent="s1" source="s-assets-m-r2" style="endArrow=block;endFill=0;dashed=1;html=1;edgeStyle=entityRelationEdgeStyle;rounded=0;" target="s-topdown-m-r1" value="O1-O6: config / class assets">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
       </root>
