@@ -1,0 +1,192 @@
+**一、输出文件**
+- 默认输出格式为 Draw.io `.drawio` XML 文件。
+- 后续只更新：相同功能的.drawio文件。
+- 不在 Lyra 仓库内创建临时输出文件或脚本。
+- 不添加 `resizable="0"` 属性。
+- 类框样式使用 `horizontalStack=0`。
+- 导出图片使用：`C:\Program Files\draw.io\draw.io.exe`。
+
+**二、页面与内容范围**
+- 保留并维护现有结构：
+- 仅记录代码中已经存在的功能。
+- 未实现、仅部分实现、依赖外部模块或由引擎完成的功能必须明确标注。
+- 不将占位类、示例类或虚构 API 当作真实代码类，例如 `XXClassname` 必须删除。
+
+**三、类图结构**
+- 所有类使用标准 UML 类框。
+- 类框统一使用 `swimlane + stackLayout`。
+- 类框顶部区域仅显示类名。
+- 属性区和方法区必须明确分隔。
+- 属性与方法保持为独立节点。
+- 类、属性、方法均可独立建立 ID，所有连线必须连接到有效节点。
+- 类框必须支持整体移动，避免移动后塌缩成一条线。
+- 类框建议使用以下关键样式：
+  - `swimlane`
+  - `childLayout=stackLayout`
+  - `horizontalStack=0`
+  - `collapsible=0`
+  - `resizeParent=0`
+  - `container=1`
+  - `dropTarget=1`
+  - `recursiveResize=0`
+- 类框本身允许整体移动和调整大小。
+- 属性、方法、分隔线等成员节点不应脱离所属类框单独移动。
+- 不使用会导致父类框自动收缩或子节点异常重排的自动调整配置。
+
+**四、类名规范**
+- 类名使用源码中的完整 C++ 类型名。
+- 保留 Unreal Engine 前缀：
+  - `A`：Actor 类
+  - `U`：UObject、Component、Modifier 等类
+  - `F`：结构体
+  - `I`：接口
+  - `E`：枚举
+- 类名不添加中文解释、换行、HTML 标签或无关描述。
+- 接口可使用标准 UML 标记，例如：
+  - `«interface» ILyraCameraAssistInterface`
+- 抽象类或接口可以使用斜体或 UML stereotype，但不能破坏类名可读性。
+- 同名但位于不同页面的类，应通过页面上下文区分；必要时使用稳定且唯一的节点 ID。
+- 类名必须与实际头文件和源码中的声明一致。
+
+**五、属性表示**
+- 属性使用独立成员节点。
+- 格式统一为：
+
+```text
+可见性 名称: 类型
+```
+
+- 示例：
+
+```text
+- CameraComponent: ULyraCameraComponent*
+# Settings: FAimAssistSettings
++ Type: ELyraInputModifierDeadZoneType
+```
+
+- 可见性符号：
+  - `+`：public
+  - `-`：private
+  - `#`：protected
+- 类型必须尽量保留源码中的实际类型。
+- 指针、引用、模板、数组、结构体和枚举类型应准确表达。
+- Unreal 属性宏不作为属性名称的一部分，除非用于说明编辑器、配置或网络特性。
+- 属性说明应简短，重点说明用途，不堆叠完整注释。
+- 不使用虚构属性名，如 `xxfield: type`。
+
+**六、方法表示**
+- 方法使用独立成员节点。
+- 格式统一为：
+
+```text
+可见性 方法名(参数): 返回类型
+```
+
+- 示例：
+
+```text
++ InitializePlayerInput(): void
+# ModifyRaw_Implementation(...): FInputActionValue
+# UpdateTargetData(DeltaTime): void
++ GetCameraModeDelegate(): FLyraCameraModeDelegate
+```
+
+- 方法名必须与源码声明或实际实现一致。
+- 参数较多时可以使用 `...` 或简化参数，但必须保证方法语义准确。
+- 返回类型必须体现实际返回值；无返回值统一写 `void`。
+- Unreal 重写函数应保留 `_Implementation` 后缀。
+- 委托、接口方法和虚函数应尽量保留其真实名称。
+- 不使用虚构方法，如 `xxmethod(type): type`。
+- 方法说明应简要描述职责、输入、输出和关键副作用。
+
+**七、关系表示**
+- 继承关系使用 UML 泛化关系，空心三角箭头。
+- 继承连接优先采用“子类底部 → 父类顶部”的纵向连接。
+- 实现接口关系使用 UML 实现关系，通常使用虚线和空心三角箭头。
+- 组合关系使用实心菱形。
+- 聚合关系使用空心菱形。
+- 依赖关系使用虚线箭头。
+- 普通调用、引用和数据流使用带方向的关联或依赖线。
+- 除继承关系外，普通关系优先采用“右侧 → 左侧”的连接方式。
+- 类间连线尽量连接类框底部、顶部、左右边界，不穿过属性和方法文本。
+- 不将大量关系线直接连接到同一个成员节点。
+- 连线的起点和终点必须是实际存在的类或成员节点。
+- 每条关系线应有清晰、简短的中文或英文标签，例如：
+  - `继承`
+  - `实现`
+  - `持有`
+  - `调用`
+  - `依赖`
+  - `PushCameraMode`
+  - `ModifyRaw_Implementation`
+- 关系标签不能遮挡类名、属性、方法或流程说明。
+
+**八、流程表达**
+- 流程直接叠加在相关类图页面中。
+- 按实际调用逻辑进行编号，而不是按源码文件顺序机械排列。
+- 使用 `F1`–`F10` 等编号。
+- 流程节点之间使用有方向的连接线。
+- 每条顺序线应包含编号或顺序标识。
+- 流程线方向必须符合实际执行顺序。
+- 流程节点应明确对应到具体类或方法。
+- 流程到方法的映射可以使用虚线，并标注对应方法名。
+- 每个功能点应尽量包含：
+  - 功能编号
+  - 功能名称
+  - 简要说明
+  - 输入
+  - 输出
+  - 关键判断条件
+  - 注意事项
+  - 代码位置或对应方法
+- 判断节点应明确表达阈值、类型选择、开关状态、目标有效性等条件。
+- 输入、判断、处理、输出、注意事项可以使用不同颜色区分，但不能牺牲可读性。
+- 流程节点不能遮挡类框或关系线。
+
+
+**九、代码依据与注释**
+- 类、属性和方法必须以实际 Lyra/Unreal Engine 源码为依据。
+- 重点代码位置应标注完整路径，例如：
+  - `Source/LyraGame/Character/LyraHeroComponent.cpp`
+  - `Source/LyraGame/Input/LyraInputModifiers.h`
+  - `Source/LyraGame/Input/LyraInputModifiers.cpp`
+  - `Plugins/GameFeatures/ShooterCore/Source/ShooterCoreRuntime/Public/Input/AimAssistInputModifier.h`
+  - `Plugins/GameFeatures/ShooterCore/Source/ShooterCoreRuntime/Private/Input/AimAssistInputModifier.cpp`
+- 方法说明采用“职责 + 核心逻辑”的简要风格。
+- 不复制大段源码。
+- 不虚构源码中不存在的调用关系。
+- Unreal Engine 生命周期、Enhanced Input、CameraMode、Gameplay Ability 和组件关系应使用准确术语。
+- 对引擎基类行为和 Lyra 自定义行为进行区分。
+- 对插件中的 ShooterCore 实现标明其模块归属。
+- 配置项、控制台变量和设置数据应标明其来源和作用。
+
+**十、版式与可读性**
+- 类整体便于拖动和重新布局。
+- 类名、属性、方法应在视觉上分区明确。
+- 继承线优先纵向布局。
+- 组合、依赖、调用线优先横向布局。
+- 关系线尽量避免交叉；无法避免时应通过布局和连接点降低遮挡。
+- 长流程可以分上下两行或左右分区，但必须保持编号连续。
+- 说明文本、流程节点和类图不能互相覆盖。
+- 中文文本应使用 `html=1`，必要时通过换行控制长文本。
+- 不在类名区域加入长说明。
+- 说明节点可以放在类图旁侧或下方。
+- 颜色只用于表达分类，不以颜色代替文字说明。
+
+**十一、校验与导出**
+- 修改后必须验证 Draw.io XML 可解析。
+- 检查所有 `edge` 的 `source` 和 `target` 是否存在。
+- 检查所有类框是否具有：
+  - `swimlane`
+  - `childLayout=stackLayout`
+  - `horizontalStack=0`
+  - `collapsible=0`
+  - `resizeParent=0`
+  - `container=1`
+- 检查类头不包含 `<br>` 或错误的长文本。
+- 检查属性、方法和分隔线是否为独立节点。
+- 检查流程编号、方向和方法映射是否完整。
+- 使用 Draw.io 导出对应页面 PNG；第三页必须使用 `-p 3`。
+- 导出后检查 PNG 文件是否生成且大小正常。
+- 必要时通过图像查看确认类名、流程和连线可读。
+- 不提交 Git，不创建分支，不覆盖无关文件。
