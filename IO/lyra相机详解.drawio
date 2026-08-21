@@ -1,0 +1,898 @@
+<mxfile host="Electron" agent="Codex" pages="3">
+  <diagram id="SML1SKDOroBHSLMTBmyL" name="0-总流程">
+    <mxGraphModel dx="1857" dy="1803" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="cOFHEHCly9KylzvXhkHt-1" parent="1" style="html=1;whiteSpace=wrap;align=left;points=[[0,0,0,0,0],[0,0.25,0,0,0],[0,0.5,0,0,0],[0,0.75,0,0,0],[0,1,0,0,0],[0.25,0,0,0,0],[0.25,1,0,0,0],[0.5,0,0,0,0],[0.5,1,0,0,0],[0.75,0,0,0,0],[0.75,1,0,0,0],[1,0,0,0,0],[1,0.25,0,0,0],[1,0.5,0,0,0],[1,0.75,0,0,0],[1,1,0,0,0]];" value="&lt;div&gt;// LyraCameraComponent.cpp&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;void ULyraCameraComponent::GetCameraView(float DeltaTime, FMinimalViewInfo&amp;amp; DesiredView)&lt;/div&gt;&lt;div&gt;{&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 1. 确保相机模式栈已初始化&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; check(CameraModeStack);&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 2. 更新当前的相机模式决策&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 这一步会调用委托 DetermineCameraModeDelegate，让外部逻辑决定当前应该激活哪些模式&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; UpdateCameraModes();&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 3. 评估相机模式栈，计算混合后的视图数据&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; FLyraCameraModeView CameraModeView;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; CameraModeStack-&amp;gt;EvaluateStack(DeltaTime, CameraModeView);&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 4. 同步相机组件的世界变换到计算出的位置&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 这确保了调试绘制（Debug Draw）和物理检测能拿到正确的相机位置&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; SetWorldLocationAndRotation(CameraModeView.Location, CameraModeView.Rotation);&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 5. 应用 FOV&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; FieldOfView = CameraModeView.FieldOfView;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 6. 填充引擎所需的最终视图结构&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; DesiredView.Location = CameraModeView.Location;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; DesiredView.Rotation = CameraModeView.Rotation;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; DesiredView.FOV = CameraModeView.FieldOfView;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp;&amp;nbsp;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 7. 同步控制旋转给 PlayerController，确保输入视角与相机一致&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; if (APlayerController* PC = GetOwningPlayerController())&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; {&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; PC-&amp;gt;SetControlRotation(CameraModeView.ControlRotation);&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; }&lt;/div&gt;&lt;div&gt;}&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="500" width="550" x="-220" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="cOFHEHCly9KylzvXhkHt-2" parent="1" style="html=1;whiteSpace=wrap;align=left;" value="&lt;div&gt;// LyraCameraComponent.cpp&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;void ULyraCameraComponent::UpdateCameraModes()&lt;/div&gt;&lt;div&gt;{&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 1. 通过委托获取当前最优先的相机模式类&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 这个委托通常绑定在角色组件上，根据游戏状态（如瞄准、死亡、载具）返回不同的 TSubclassOf&amp;lt;ULyraCameraMode&amp;gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; TSubclassOf&amp;lt;ULyraCameraMode&amp;gt; NewCameraModeClass = nullptr;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; if (DetermineCameraModeDelegate.IsBound())&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; {&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; NewCameraModeClass = DetermineCameraModeDelegate.Execute(this);&lt;/div&gt;&lt;div style=&quot;&quot;&gt;&amp;nbsp; &amp;nbsp; }&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 2. 如果没有指定新模式，则使用默认模式（通常是第三人称）&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; if (NewCameraModeClass == nullptr)&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; {&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; NewCameraModeClass = DefaultCameraMode;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; }&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 3. 将新模式推入栈中&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // PushMode 内部会处理权重的渐变，如果栈顶已经是该模式，则仅刷新权重&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; CameraModeStack-&amp;gt;PushMode(NewCameraModeClass);&lt;/div&gt;&lt;div&gt;}&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="340" width="680" x="720" y="-160" as="geometry" />
+        </mxCell>
+        <mxCell id="cOFHEHCly9KylzvXhkHt-3" parent="1" style="html=1;whiteSpace=wrap;align=left;" value="&lt;div&gt;// LyraCameraModeStack.cpp&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;void ULyraCameraModeStack::EvaluateStack(float DeltaTime, FLyraCameraModeView&amp;amp; OutView)&lt;/div&gt;&lt;div&gt;{&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 1. 清理过期的模式（权重降为0的模式）&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; RemoveExpiredModes();&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 2. 更新所有激活模式的权重&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 栈顶模式权重最高，底层模式权重逐渐降低，实现平滑过渡&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; UpdateModeWeights();&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 3. 初始化输出视图为默认值&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; OutView.Reset();&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 4. 遍历所有激活的模式，逐个计算并混合&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; for (FCameraModeHandle&amp;amp; ModeHandle : ActiveModes)&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; {&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; ULyraCameraMode* Mode = ModeHandle.Mode;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; float Weight = ModeHandle.Weight;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; if (Weight &amp;lt;= 0.0f) continue;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; // 4.1 获取单个模式的视图数据&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; FLyraCameraModeView ModeView;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; Mode-&amp;gt;UpdateView(DeltaTime, ModeView);&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; // 4.2 加权混合&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; // 位置和 FOV 使用线性插值，旋转使用四元数球面插值（Slerp）以保证平滑&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; OutView.Location += ModeView.Location * Weight;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; OutView.Rotation = FMath::QInterpTo(OutView.Rotation.Quaternion(), ModeView.Rotation.Quaternion(), Weight).Rotator();&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; OutView.FieldOfView += ModeView.FieldOfView * Weight;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; OutView.ControlRotation = ModeView.ControlRotation; // 控制旋转通常直接取最高优先级模式的&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; }&lt;/div&gt;&lt;div&gt;}&lt;/div&gt;&lt;div style=&quot;&quot;&gt;&lt;br&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="520" width="700" x="720" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="cOFHEHCly9KylzvXhkHt-4" parent="1" style="html=1;whiteSpace=wrap;align=left;" value="&lt;div&gt;// LyraCameraMode_ThirdPerson.cpp&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;void ULyraCameraMode_ThirdPerson::UpdateView(float DeltaTime, FLyraCameraModeView&amp;amp; OutView)&lt;/div&gt;&lt;div&gt;{&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; Super::UpdateView(DeltaTime, OutView);&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; const APawn* TargetPawn = GetTargetPawn();&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; if (!TargetPawn) return;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 1. 获取基础数据&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; FVector PivotLocation = TargetPawn-&amp;gt;GetActorLocation();&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; FRotator ControlRotation = TargetPawn-&amp;gt;GetControlRotation();&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp;&amp;nbsp;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 限制俯仰角&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; ControlRotation.Pitch = FMath::ClampAngle(ControlRotation.Pitch, ViewPitchMin, ViewPitchMax);&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 2. 计算理想位置（无障碍物时）&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; FVector IdealLocation = PivotLocation + ControlRotation.RotateVector(CameraOffset);&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 3. 【核心】穿透规避检测&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // HandlePenetration 会发射多根感触射线，返回一个安全的臂长&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; float FinalArmLength = HandlePenetration(PivotLocation, ControlRotation, CameraOffset.Size());&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp;&amp;nbsp;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 根据安全臂长重新计算最终位置&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; FVector FinalLocation = PivotLocation + ControlRotation.RotateVector(FVector(-FinalArmLength, 0.0f, CameraOffset.Z));&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 4. 动态 FOV 调整&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; float TargetFOV = BaseFOV;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; if (FOVCurve)&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; {&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; float Speed = TargetPawn-&amp;gt;GetVelocity().Size();&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; TargetFOV += FOVCurve-&amp;gt;GetFloatValue(Speed);&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; }&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 5. 平滑插值（Lag）&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 使用指数缓动算法，使相机运动更顺滑&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; OutView.Location = FMath::VInterpTo(OutView.Location, FinalLocation, DeltaTime, LocationLagSpeed);&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; OutView.Rotation = FMath::RInterpTo(OutView.Rotation, ControlRotation, DeltaTime, RotationLagSpeed);&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; OutView.FieldOfView = FMath::FInterpTo(OutView.FieldOfView, TargetFOV, DeltaTime, FOVLagSpeed);&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; OutView.ControlRotation = ControlRotation;&lt;/div&gt;&lt;div&gt;}&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="620" width="680" x="1615" y="630" as="geometry" />
+        </mxCell>
+        <mxCell id="cOFHEHCly9KylzvXhkHt-5" parent="1" style="html=1;whiteSpace=wrap;align=left;" value="&lt;div&gt;// LyraCameraMode_ThirdPerson.cpp&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;float ULyraCameraMode_ThirdPerson::HandlePenetration(const FVector&amp;amp; PivotLocation, const FRotator&amp;amp; ControlRotation, float MaxArmLength)&lt;/div&gt;&lt;div&gt;{&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; float MinHitTime = 1.0f; // 1.0 表示无遮挡&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 遍历所有感触射线（Feelers）&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; for (const FLyraPenetrationAvoidanceFeeler&amp;amp; Feeler : PenetrationFeelers)&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; {&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; // 计算射线的世界空间方向&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; FVector FeelerDirection = ControlRotation.RotateVector(Feeler.ProbeDirection);&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;&amp;nbsp;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; // 执行球形扫描检测&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; FHitResult HitResult;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; bool bHit = GetWorld()-&amp;gt;SweepSingleByChannel(&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; HitResult,&amp;nbsp;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; PivotLocation,&amp;nbsp;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; PivotLocation + FeelerDirection * MaxArmLength,&amp;nbsp;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; FQuat::Identity,&amp;nbsp;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; ECC_Camera,&amp;nbsp;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; FCollisionShape::MakeSphere(Feeler.ProbeRadius)&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; );&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; if (bHit)&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; {&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; // 计算阻塞百分比，并根据射线权重进行修正&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; float BlockPct = HitResult.Time;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; float Weight = (HitResult.Actor.Get() == GetTargetPawn()) ? Feeler.PawnWeight : Feeler.WorldWeight;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;&amp;nbsp;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; // 权重越低，允许相机越靠近障碍物（如允许穿透其他玩家）&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; BlockPct += (1.f - BlockPct) * (1.f - Weight);&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;&amp;nbsp;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; // 取最小的命中时间，确保所有方向都不穿墙&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; MinHitTime = FMath::Min(MinHitTime, BlockPct);&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; }&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; }&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 根据最小命中时间计算最终安全臂长&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; return MaxArmLength * MinHitTime;&lt;/div&gt;&lt;div&gt;}&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="600" width="790" x="2490" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="cOFHEHCly9KylzvXhkHt-6" edge="1" parent="1" source="cOFHEHCly9KylzvXhkHt-1" style="endArrow=block;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontColor=default;fontStyle=1;horizontal=1;exitX=1;exitY=0.25;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" target="cOFHEHCly9KylzvXhkHt-2" value="">
+          <mxGeometry relative="1" width="160" as="geometry">
+            <mxPoint x="630" y="280" as="sourcePoint" />
+            <mxPoint x="790" y="280" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cOFHEHCly9KylzvXhkHt-7" edge="1" parent="1" source="cOFHEHCly9KylzvXhkHt-1" style="endArrow=block;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontColor=default;fontStyle=1;horizontal=1;exitX=1;exitY=0.38;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.005;entryY=0.094;entryDx=0;entryDy=0;entryPerimeter=0;" target="cOFHEHCly9KylzvXhkHt-3" value="">
+          <mxGeometry relative="1" width="160" as="geometry">
+            <mxPoint x="630" y="350" as="sourcePoint" />
+            <mxPoint x="790" y="350" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cOFHEHCly9KylzvXhkHt-8" edge="1" parent="1" source="cOFHEHCly9KylzvXhkHt-3" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontColor=default;fontStyle=1;horizontal=1;exitX=0.998;exitY=0.659;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.061;entryDx=0;entryDy=0;entryPerimeter=0;" target="cOFHEHCly9KylzvXhkHt-4" value="">
+          <mxGeometry relative="1" width="160" as="geometry">
+            <mxPoint x="1490" y="640" as="sourcePoint" />
+            <mxPoint x="1650" y="640" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cOFHEHCly9KylzvXhkHt-9" edge="1" parent="1" source="cOFHEHCly9KylzvXhkHt-4" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontColor=default;fontStyle=1;horizontal=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=-0.001;entryY=0.071;entryDx=0;entryDy=0;entryPerimeter=0;" target="cOFHEHCly9KylzvXhkHt-5" value="">
+          <mxGeometry relative="1" width="160" as="geometry">
+            <mxPoint x="2360" y="800" as="sourcePoint" />
+            <mxPoint x="2520" y="800" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="S4aTtYqVxo5GAAmn353i-1" parent="1" style="html=1;whiteSpace=wrap;align=left;" value="&lt;div&gt;// LyraCameraMode_ThirdPerson.cpp&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;void ULyraCameraMode_ThirdPerson::UpdateView(float DeltaTime, FLyraCameraModeView&amp;amp; OutView)&lt;/div&gt;&lt;div&gt;{&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; Super::UpdateView(DeltaTime, OutView);&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; const APawn* TargetPawn = GetTargetPawn();&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; if (!TargetPawn) return;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 1. 【关键】获取动态枢轴点 (Dynamic Pivot)&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 下蹲时，角色的胶囊体高度变化，GetPivotLocation 会返回降低后的位置（通常是眼睛或头部位置）&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 这确保了相机是围绕“当前的头部位置”旋转，而不是固定的根节点&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; FVector PivotLocation = GetPivotLocation(TargetPawn);&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp;&amp;nbsp;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 2. 获取控制旋转并限制俯仰角&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; FRotator ControlRotation = TargetPawn-&amp;gt;GetControlRotation();&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; ControlRotation.Pitch = FMath::ClampAngle(ControlRotation.Pitch, ViewPitchMin, ViewPitchMax);&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 3. 【关键】下蹲状态的参数补偿&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 检查角色是否处于下蹲状态 (通过 GameplayTag 或 MovementComponent)&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; bool bIsCrouching = IsTargetCrouching(TargetPawn);&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp;&amp;nbsp;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 基础偏移量&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; FVector BaseOffset = CameraOffset;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; float BaseFOV = this-&amp;gt;BaseFOV;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; float BaseArmLength = CameraOffset.Size();&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; if (bIsCrouching)&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; {&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; // 如果配置了下蹲专用曲线，则进行参数微调&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; // 例如：下蹲时稍微拉远一点相机以避免看到地面过多，或调整 FOV&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; if (CrouchFOVCurve)&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; {&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; // 假设曲线输入为 1.0 代表完全下蹲&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; BaseFOV += CrouchFOVCurve-&amp;gt;GetFloatValue(1.0f);&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; }&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;&amp;nbsp;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; if (CrouchOffsetCurve)&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; {&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; // 动态调整偏移量，例如增加 Z 轴高度或改变后方距离&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; FVector CrouchOffsetDelta = CrouchOffsetCurve-&amp;gt;GetVectorValue(1.0f);&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; BaseOffset += CrouchOffsetDelta;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; }&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; }&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 4. 计算理想相机位置&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; FVector IdealLocation = PivotLocation + ControlRotation.RotateVector(BaseOffset);&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 5. 穿透规避检测 (防穿墙)&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 注意：由于 PivotLocation 已经降低，射线检测会自动适应下蹲后的高度&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; float FinalArmLength = HandlePenetration(PivotLocation, ControlRotation, BaseOffset.Size());&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp;&amp;nbsp;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 根据检测到的安全臂长重新计算最终位置&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; FVector FinalLocation = PivotLocation + ControlRotation.RotateVector(FVector(-FinalArmLength, 0.0f, BaseOffset.Z));&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 6. 平滑插值 (Smoothing)&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; // 使用 VInterpTo/RInterpTo 确保从站立到下蹲的过渡是平滑的，而非瞬移&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; OutView.Location = FMath::VInterpTo(OutView.Location, FinalLocation, DeltaTime, LocationLagSpeed);&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; OutView.Rotation = FMath::RInterpTo(OutView.Rotation, ControlRotation, DeltaTime, RotationLagSpeed);&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; OutView.FieldOfView = FMath::FInterpTo(OutView.FieldOfView, BaseFOV, DeltaTime, FOVLagSpeed);&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; OutView.ControlRotation = ControlRotation;&lt;/div&gt;&lt;div&gt;}&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="920" width="660" x="1635" y="1390" as="geometry" />
+        </mxCell>
+        <mxCell id="S4aTtYqVxo5GAAmn353i-2" edge="1" parent="1" source="S4aTtYqVxo5GAAmn353i-1" style="endArrow=block;endSize=16;endFill=0;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontColor=default;fontStyle=1;horizontal=1;exitX=0.486;exitY=0.006;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" target="cOFHEHCly9KylzvXhkHt-4" value="Extends">
+          <mxGeometry relative="1" width="160" as="geometry">
+            <mxPoint x="1890" y="1080" as="sourcePoint" />
+            <mxPoint x="2050" y="1080" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="T4L2sT_ZiC5gC5xarPfQ-1" parent="1" style="html=1;whiteSpace=wrap;align=left;" value="&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;// Copyright Epic Games, Inc. All Rights Reserved.&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;#include &quot;LyraCameraMode_TopDownArenaCamera.h&quot;&lt;/div&gt;&lt;div&gt;#include &quot;LyraCameraComponent.h&quot;&lt;/div&gt;&lt;div&gt;#include &quot;GameFramework/Pawn.h&quot;&lt;/div&gt;&lt;div&gt;#include &quot;GameFramework/PlayerController.h&quot;&lt;/div&gt;&lt;div&gt;#include &quot;Engine/World.h&quot;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;ULyraCameraMode_TopDownArenaCamera::ULyraCameraMode_TopDownArenaCamera()&lt;/div&gt;&lt;div&gt;{&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;// 初始化默认值&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;// 设置默认的俯视角度，-60度是一个常见的俯视视角&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;DefaultPivotRotation = FRotator(-60.0f, 0.0f, 0.0f);&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: pre; white-space: normal;&quot;&gt;&#x9;&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;// 默认竞技场尺寸，实际项目中通常在蓝图或关卡中配置&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;ArenaWidth = 1000.0f;&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;ArenaHeight = 1000.0f;&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: pre; white-space: normal;&quot;&gt;&#x9;&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;// 注意：BoundsSizeToDistance 曲线通常在编辑器中配置，这里不硬编码具体关键点&lt;/span&gt;&lt;/div&gt;&lt;div&gt;}&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;void ULyraCameraMode_TopDownArenaCamera::UpdateView(float DeltaTime)&lt;/div&gt;&lt;div&gt;{&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;// 1. 获取目标 Pawn（角色）&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;const APawn* TargetPawn = GetTargetPawn();&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;if (!TargetPawn)&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;{&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&#x9;&lt;/span&gt;return;&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;}&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;// 2. 确定支点位置 (Pivot Location)&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;// 通常以角色的位置为中心&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;FVector PivotLocation = TargetPawn-&amp;gt;GetActorLocation();&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: pre; white-space: normal;&quot;&gt;&#x9;&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;// 可选：将支点稍微向上偏移，避免相机过于贴近地面或角色头部&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;PivotLocation.Z += 50.0f;&amp;nbsp;&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;// 3. 计算边界尺寸&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;// 取宽和高中的最大值作为参考尺寸，确保整个竞技场都在视野内&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;float BoundsSize = FMath::Max(ArenaWidth, ArenaHeight);&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;// 4. 通过曲线采样理想相机距离&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;// 根据当前地图的大小，从曲线中获取推荐的相机高度/距离&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;float DesiredDistance = BoundsSizeToDistance.GetFloatValue(BoundsSize);&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;// 5. 平滑过渡相机距离&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;// 在实际实现中，通常会维护一个 CurrentDistance 成员变量&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;// 这里为了简化，假设直接使用该距离，或者由上层混合处理平滑&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;// 如果需要内部平滑，可以使用 FMath::FInterpTo(CurrentDistance, DesiredDistance, DeltaTime, InterpSpeed);&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;float CurrentDistance = DesiredDistance;&amp;nbsp;&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;// 6. 计算相机最终位置&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;// 将向下的偏移向量 (0, 0, -Distance) 根据默认旋转进行变换&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;// 例如，如果 Pitch 是 -60度，相机就会位于角色后上方&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;FVector Offset = DefaultPivotRotation.RotateVector(FVector(0, 0, -CurrentDistance));&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;FVector CameraLocation = PivotLocation + Offset;&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;// 7. 设置视图目标&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;// 将计算出的位置、旋转和固定的 FOV 传递给相机系统&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;// FOV 也可以做成曲线或根据状态动态调整，这里固定为 90 度作为示例&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: normal;&quot;&gt;&lt;span style=&quot;white-space:pre&quot;&gt;&#x9;&lt;/span&gt;SetViewTarget(CameraLocation, DefaultPivotRotation, 90.0f);&lt;/span&gt;&lt;/div&gt;&lt;div&gt;}&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="890" width="640" x="1760" y="-890" as="geometry" />
+        </mxCell>
+        <mxCell id="T4L2sT_ZiC5gC5xarPfQ-2" edge="1" parent="1" source="cOFHEHCly9KylzvXhkHt-3" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontColor=default;fontStyle=1;horizontal=1;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=-0.003;entryY=0.371;entryDx=0;entryDy=0;entryPerimeter=0;" target="T4L2sT_ZiC5gC5xarPfQ-1" value="">
+          <mxGeometry relative="1" width="160" as="geometry">
+            <mxPoint x="1620" as="sourcePoint" />
+            <mxPoint x="1780" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="classes" name="1-相机类结构">
+    <mxGraphModel dx="4198" dy="2226" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" value="" />
+        <mxCell id="1" parent="0" value="" />
+        <mxCell id="p1-title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=22;fontStyle=1;whiteSpace=wrap;horizontalStack=0;" value="Lyra 相机相关类结构、继承关系与职责分工" vertex="1">
+          <mxGeometry height="44" width="2200" x="1050" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-note" parent="1" style="shape=note;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;horizontalStack=0;" value="&lt;b&gt;连线规范&lt;/b&gt;&lt;br&gt;继承/接口实现：子类顶部连接父类底部。组合、关联、依赖：优先从源类右侧连接目标类左侧。类框统一为“类名—属性—方法”，成员均为独立节点。" vertex="1">
+          <mxGeometry height="120" width="760" x="3300" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="pcm-base" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="APlayerCameraManager" vertex="1">
+          <mxGeometry height="66" width="520" x="-1880" y="594" as="geometry" />
+        </mxCell>
+        <mxCell id="pcm-base-m1" parent="pcm-base" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ UpdateViewTarget(OutVT, DeltaTime): void" vertex="1">
+          <mxGeometry height="30" width="520" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="pcm" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="ALyraPlayerCameraManager" vertex="1">
+          <mxGeometry height="134" width="600" x="-1920" y="794" as="geometry" />
+        </mxCell>
+        <mxCell id="pcm-a1" parent="pcm" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="- UICamera: TObjectPtr&amp;lt;ULyraUICameraManagerComponent&amp;gt;" vertex="1">
+          <mxGeometry height="30" width="600" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="pcm-separator" parent="pcm" style="line;strokeWidth=1;fillColor=none;rotatable=0;points=[];portConstraint=eastwest;strokeColor=inherit;movable=0;horizontalStack=0;" value="" vertex="1">
+          <mxGeometry height="8" width="600" y="66" as="geometry" />
+        </mxCell>
+        <mxCell id="pcm-m1" parent="pcm" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ GetUICameraComponent(): ULyraUICameraManagerComponent*" vertex="1">
+          <mxGeometry height="30" width="600" y="74" as="geometry" />
+        </mxCell>
+        <mxCell id="pcm-m2" parent="pcm" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="# UpdateViewTarget(OutVT, DeltaTime): void" vertex="1">
+          <mxGeometry height="30" width="600" y="104" as="geometry" />
+        </mxCell>
+        <mxCell id="actorcomp" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="UActorComponent" vertex="1">
+          <mxGeometry height="36" width="480" x="-1110" y="554" as="geometry" />
+        </mxCell>
+        <mxCell id="ui" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="ULyraUICameraManagerComponent" vertex="1">
+          <mxGeometry height="194" width="620" x="-1180" y="734" as="geometry" />
+        </mxCell>
+        <mxCell id="ui-a1" parent="ui" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="- ViewTarget: TObjectPtr&amp;lt;AActor&amp;gt;" vertex="1">
+          <mxGeometry height="30" width="620" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="ui-a2" parent="ui" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="- bUpdatingViewTarget: bool" vertex="1">
+          <mxGeometry height="30" width="620" y="66" as="geometry" />
+        </mxCell>
+        <mxCell id="ui-separator" parent="ui" style="line;strokeWidth=1;fillColor=none;rotatable=0;points=[];portConstraint=eastwest;strokeColor=inherit;movable=0;horizontalStack=0;" value="" vertex="1">
+          <mxGeometry height="8" width="620" y="96" as="geometry" />
+        </mxCell>
+        <mxCell id="ui-m1" parent="ui" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ SetViewTarget(InViewTarget, TransitionParams): void" vertex="1">
+          <mxGeometry height="30" width="620" y="104" as="geometry" />
+        </mxCell>
+        <mxCell id="ui-m2" parent="ui" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ NeedsToUpdateViewTarget(): bool" vertex="1">
+          <mxGeometry height="30" width="620" y="134" as="geometry" />
+        </mxCell>
+        <mxCell id="ui-m3" parent="ui" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ UpdateViewTarget(OutVT, DeltaTime): void" vertex="1">
+          <mxGeometry height="30" width="620" y="164" as="geometry" />
+        </mxCell>
+        <mxCell id="cam-base" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="UCameraComponent" vertex="1">
+          <mxGeometry height="66" width="500" x="1560" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="cam-base-m1" parent="cam-base" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ GetCameraView(DeltaTime, DesiredView): void" vertex="1">
+          <mxGeometry height="30" width="500" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="cam" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="ULyraCameraComponent" vertex="1">
+          <mxGeometry height="254" width="720" x="1450" y="251" as="geometry" />
+        </mxCell>
+        <mxCell id="cam-a1" parent="cam" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ DetermineCameraModeDelegate: FLyraCameraModeDelegate" vertex="1">
+          <mxGeometry height="30" width="720" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="cam-a2" parent="cam" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="- CameraModeStack: TObjectPtr&amp;lt;ULyraCameraModeStack&amp;gt;" vertex="1">
+          <mxGeometry height="30" width="720" y="66" as="geometry" />
+        </mxCell>
+        <mxCell id="cam-a3" parent="cam" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="- FieldOfViewOffset: float" vertex="1">
+          <mxGeometry height="30" width="720" y="96" as="geometry" />
+        </mxCell>
+        <mxCell id="cam-separator" parent="cam" style="line;strokeWidth=1;fillColor=none;rotatable=0;points=[];portConstraint=eastwest;strokeColor=inherit;movable=0;horizontalStack=0;" value="" vertex="1">
+          <mxGeometry height="8" width="720" y="126" as="geometry" />
+        </mxCell>
+        <mxCell id="cam-m1" parent="cam" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="# OnRegister(): void" vertex="1">
+          <mxGeometry height="30" width="720" y="134" as="geometry" />
+        </mxCell>
+        <mxCell id="cam-m2" parent="cam" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="# GetCameraView(DeltaTime, DesiredView): void" vertex="1">
+          <mxGeometry height="30" width="720" y="164" as="geometry" />
+        </mxCell>
+        <mxCell id="cam-m3" parent="cam" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="# UpdateCameraModes(): void" vertex="1">
+          <mxGeometry height="30" width="720" y="194" as="geometry" />
+        </mxCell>
+        <mxCell id="cam-m4" parent="cam" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ GetBlendInfo(OutWeight, OutTag): void" vertex="1">
+          <mxGeometry height="30" width="720" y="224" as="geometry" />
+        </mxCell>
+        <mxCell id="object" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="UObject" vertex="1">
+          <mxGeometry height="36" width="480" x="2640" y="10" as="geometry" />
+        </mxCell>
+        <mxCell id="stack" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="ULyraCameraModeStack" vertex="1">
+          <mxGeometry height="254" width="660" x="2250" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="stack-a1" parent="stack" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="- bIsActive: bool" vertex="1">
+          <mxGeometry height="30" width="660" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="stack-a2" parent="stack" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="- CameraModeInstances: TArray&amp;lt;ULyraCameraMode*&amp;gt;" vertex="1">
+          <mxGeometry height="30" width="660" y="66" as="geometry" />
+        </mxCell>
+        <mxCell id="stack-a3" parent="stack" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="- CameraModeStack: TArray&amp;lt;ULyraCameraMode*&amp;gt;" vertex="1">
+          <mxGeometry height="30" width="660" y="96" as="geometry" />
+        </mxCell>
+        <mxCell id="stack-separator" parent="stack" style="line;strokeWidth=1;fillColor=none;rotatable=0;points=[];portConstraint=eastwest;strokeColor=inherit;movable=0;horizontalStack=0;" value="" vertex="1">
+          <mxGeometry height="8" width="660" y="126" as="geometry" />
+        </mxCell>
+        <mxCell id="stack-m1" parent="stack" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ PushCameraMode(CameraModeClass): void" vertex="1">
+          <mxGeometry height="30" width="660" y="134" as="geometry" />
+        </mxCell>
+        <mxCell id="stack-m2" parent="stack" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ EvaluateStack(DeltaTime, OutView): bool" vertex="1">
+          <mxGeometry height="30" width="660" y="164" as="geometry" />
+        </mxCell>
+        <mxCell id="stack-m3" parent="stack" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="- UpdateStack(DeltaTime): void" vertex="1">
+          <mxGeometry height="30" width="660" y="194" as="geometry" />
+        </mxCell>
+        <mxCell id="stack-m4" parent="stack" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="- BlendStack(OutView): void" vertex="1">
+          <mxGeometry height="30" width="660" y="224" as="geometry" />
+        </mxCell>
+        <mxCell id="mode" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="ULyraCameraMode" vertex="1">
+          <mxGeometry height="374" width="700" x="3040" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="mode-a1" parent="mode" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="# View: FLyraCameraModeView" vertex="1">
+          <mxGeometry height="30" width="700" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="mode-a2" parent="mode" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="# FieldOfView: float" vertex="1">
+          <mxGeometry height="30" width="700" y="66" as="geometry" />
+        </mxCell>
+        <mxCell id="mode-a3" parent="mode" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="# ViewPitchMin: float" vertex="1">
+          <mxGeometry height="30" width="700" y="96" as="geometry" />
+        </mxCell>
+        <mxCell id="mode-a4" parent="mode" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="# ViewPitchMax: float" vertex="1">
+          <mxGeometry height="30" width="700" y="126" as="geometry" />
+        </mxCell>
+        <mxCell id="mode-a5" parent="mode" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="# BlendTime: float" vertex="1">
+          <mxGeometry height="30" width="700" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="mode-a6" parent="mode" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="# BlendWeight: float" vertex="1">
+          <mxGeometry height="30" width="700" y="186" as="geometry" />
+        </mxCell>
+        <mxCell id="mode-separator" parent="mode" style="line;strokeWidth=1;fillColor=none;rotatable=0;points=[];portConstraint=eastwest;strokeColor=inherit;movable=0;horizontalStack=0;" value="" vertex="1">
+          <mxGeometry height="8" width="700" y="216" as="geometry" />
+        </mxCell>
+        <mxCell id="mode-m1" parent="mode" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ UpdateCameraMode(DeltaTime): void" vertex="1">
+          <mxGeometry height="30" width="700" y="224" as="geometry" />
+        </mxCell>
+        <mxCell id="mode-m2" parent="mode" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="# UpdateView(DeltaTime): void" vertex="1">
+          <mxGeometry height="30" width="700" y="254" as="geometry" />
+        </mxCell>
+        <mxCell id="mode-m3" parent="mode" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="# UpdateBlending(DeltaTime): void" vertex="1">
+          <mxGeometry height="30" width="700" y="284" as="geometry" />
+        </mxCell>
+        <mxCell id="mode-m4" parent="mode" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="# GetPivotLocation(): FVector" vertex="1">
+          <mxGeometry height="30" width="700" y="314" as="geometry" />
+        </mxCell>
+        <mxCell id="mode-m5" parent="mode" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="# GetPivotRotation(): FRotator" vertex="1">
+          <mxGeometry height="30" width="700" y="344" as="geometry" />
+        </mxCell>
+        <mxCell id="modular" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="AModularCharacter" vertex="1">
+          <mxGeometry height="36" width="520" x="200" y="-10" as="geometry" />
+        </mxCell>
+        <mxCell id="character" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="ALyraCharacter" vertex="1">
+          <mxGeometry height="104" width="600" x="160" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="character-a1" parent="character" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="- CameraComponent: TObjectPtr&amp;lt;ULyraCameraComponent&amp;gt;" vertex="1">
+          <mxGeometry height="30" width="600" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="character-separator" parent="character" style="line;strokeWidth=1;fillColor=none;rotatable=0;points=[];portConstraint=eastwest;strokeColor=inherit;movable=0;horizontalStack=0;" value="" vertex="1">
+          <mxGeometry height="8" width="600" y="66" as="geometry" />
+        </mxCell>
+        <mxCell id="character-m1" parent="character" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ ALyraCharacter(ObjectInitializer): constructor" vertex="1">
+          <mxGeometry height="30" width="600" y="74" as="geometry" />
+        </mxCell>
+        <mxCell id="commonpc" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="ACommonPlayerController" vertex="1">
+          <mxGeometry height="36" width="520" x="-320" y="830" as="geometry" />
+        </mxCell>
+        <mxCell id="lyrapc" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="ALyraPlayerController" vertex="1">
+          <mxGeometry height="104" width="620" x="-370" y="1120" as="geometry" />
+        </mxCell>
+        <mxCell id="lyrapc-a1" parent="lyrapc" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="- bHideViewTargetPawnNextFrame: bool" vertex="1">
+          <mxGeometry height="30" width="620" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="lyrapc-separator" parent="lyrapc" style="line;strokeWidth=1;fillColor=none;rotatable=0;points=[];portConstraint=eastwest;strokeColor=inherit;movable=0;horizontalStack=0;" value="" vertex="1">
+          <mxGeometry height="8" width="620" y="66" as="geometry" />
+        </mxCell>
+        <mxCell id="lyrapc-m1" parent="lyrapc" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ OnCameraPenetratingTarget(): void" vertex="1">
+          <mxGeometry height="30" width="620" y="74" as="geometry" />
+        </mxCell>
+        <mxCell id="pawncomp" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="UPawnComponent" vertex="1">
+          <mxGeometry height="36" width="500" x="1310" y="810" as="geometry" />
+        </mxCell>
+        <mxCell id="hero" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="ULyraHeroComponent" vertex="1">
+          <mxGeometry height="164" width="700" x="1210" y="980" as="geometry" />
+        </mxCell>
+        <mxCell id="hero-a1" parent="hero" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="- AbilityCameraMode: TSubclassOf&amp;lt;ULyraCameraMode&amp;gt;" vertex="1">
+          <mxGeometry height="30" width="700" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="hero-separator" parent="hero" style="line;strokeWidth=1;fillColor=none;rotatable=0;points=[];portConstraint=eastwest;strokeColor=inherit;movable=0;horizontalStack=0;" value="" vertex="1">
+          <mxGeometry height="8" width="700" y="66" as="geometry" />
+        </mxCell>
+        <mxCell id="hero-m1" parent="hero" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ Input_LookMouse(InputActionValue): void" vertex="1">
+          <mxGeometry height="30" width="700" y="74" as="geometry" />
+        </mxCell>
+        <mxCell id="hero-m2" parent="hero" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ Input_LookStick(InputActionValue): void" vertex="1">
+          <mxGeometry height="30" width="700" y="104" as="geometry" />
+        </mxCell>
+        <mxCell id="hero-m3" parent="hero" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ DetermineCameraMode(): TSubclassOf&amp;lt;ULyraCameraMode&amp;gt;" vertex="1">
+          <mxGeometry height="30" width="700" y="134" as="geometry" />
+        </mxCell>
+        <mxCell id="third" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="ULyraCameraMode_ThirdPerson" vertex="1">
+          <mxGeometry height="284" width="760" x="3420" y="1750" as="geometry" />
+        </mxCell>
+        <mxCell id="third-a1" parent="third" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="# TargetOffsetCurve: TObjectPtr&amp;lt;const UCurveVector&amp;gt;" vertex="1">
+          <mxGeometry height="30" width="760" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="third-a2" parent="third" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="# bPreventPenetration: bool" vertex="1">
+          <mxGeometry height="30" width="760" y="66" as="geometry" />
+        </mxCell>
+        <mxCell id="third-a3" parent="third" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="# bDoPredictiveAvoidance: bool" vertex="1">
+          <mxGeometry height="30" width="760" y="96" as="geometry" />
+        </mxCell>
+        <mxCell id="third-a4" parent="third" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="# PenetrationAvoidanceFeelers: TArray&amp;lt;FLyraPenetrationAvoidanceFeeler&amp;gt;" vertex="1">
+          <mxGeometry height="30" width="760" y="126" as="geometry" />
+        </mxCell>
+        <mxCell id="third-separator" parent="third" style="line;strokeWidth=1;fillColor=none;rotatable=0;points=[];portConstraint=eastwest;strokeColor=inherit;movable=0;horizontalStack=0;" value="" vertex="1">
+          <mxGeometry height="8" width="760" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="third-m1" parent="third" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="# UpdateView(DeltaTime): void" vertex="1">
+          <mxGeometry height="30" width="760" y="164" as="geometry" />
+        </mxCell>
+        <mxCell id="third-m2" parent="third" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="- UpdateForTarget(DeltaTime): void" vertex="1">
+          <mxGeometry height="30" width="760" y="194" as="geometry" />
+        </mxCell>
+        <mxCell id="third-m3" parent="third" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="- UpdatePreventPenetration(DeltaTime): void" vertex="1">
+          <mxGeometry height="30" width="760" y="224" as="geometry" />
+        </mxCell>
+        <mxCell id="third-m4" parent="third" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="- PreventCameraPenetration(...): void" vertex="1">
+          <mxGeometry height="30" width="760" y="254" as="geometry" />
+        </mxCell>
+        <mxCell id="topdown" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="ULyraCameraMode_TopDownArenaCamera" vertex="1">
+          <mxGeometry height="134" width="720" x="5120" y="1750" as="geometry" />
+        </mxCell>
+        <mxCell id="topdown-a1" parent="topdown" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="# ArenaBounds: FBox" vertex="1">
+          <mxGeometry height="30" width="720" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="topdown-a2" parent="topdown" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="# BoundsSize: float" vertex="1">
+          <mxGeometry height="30" width="720" y="66" as="geometry" />
+        </mxCell>
+        <mxCell id="topdown-separator" parent="topdown" style="line;strokeWidth=1;fillColor=none;rotatable=0;points=[];portConstraint=eastwest;strokeColor=inherit;movable=0;horizontalStack=0;" value="" vertex="1">
+          <mxGeometry height="8" width="720" y="96" as="geometry" />
+        </mxCell>
+        <mxCell id="topdown-m1" parent="topdown" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="# UpdateView(DeltaTime): void" vertex="1">
+          <mxGeometry height="30" width="720" y="104" as="geometry" />
+        </mxCell>
+        <mxCell id="view" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="FLyraCameraModeView" vertex="1">
+          <mxGeometry height="194" width="640" x="3880" y="410" as="geometry" />
+        </mxCell>
+        <mxCell id="view-a1" parent="view" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ Location: FVector" vertex="1">
+          <mxGeometry height="30" width="640" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="view-a2" parent="view" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ Rotation: FRotator" vertex="1">
+          <mxGeometry height="30" width="640" y="66" as="geometry" />
+        </mxCell>
+        <mxCell id="view-a3" parent="view" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ ControlRotation: FRotator" vertex="1">
+          <mxGeometry height="30" width="640" y="96" as="geometry" />
+        </mxCell>
+        <mxCell id="view-a4" parent="view" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ FieldOfView: float" vertex="1">
+          <mxGeometry height="30" width="640" y="126" as="geometry" />
+        </mxCell>
+        <mxCell id="view-separator" parent="view" style="line;strokeWidth=1;fillColor=none;rotatable=0;points=[];portConstraint=eastwest;strokeColor=inherit;movable=0;horizontalStack=0;" value="" vertex="1">
+          <mxGeometry height="8" width="640" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="view-m1" parent="view" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ Blend(Other, OtherWeight): void" vertex="1">
+          <mxGeometry height="30" width="640" y="164" as="geometry" />
+        </mxCell>
+        <mxCell id="feeler" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="FLyraPenetrationAvoidanceFeeler" vertex="1">
+          <mxGeometry height="216" width="660" x="4320" y="1980" as="geometry" />
+        </mxCell>
+        <mxCell id="feeler-a1" parent="feeler" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ AdjustmentRot: FRotator" vertex="1">
+          <mxGeometry height="30" width="660" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="feeler-a2" parent="feeler" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ WorldWeight: float" vertex="1">
+          <mxGeometry height="30" width="660" y="66" as="geometry" />
+        </mxCell>
+        <mxCell id="feeler-a3" parent="feeler" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ PawnWeight: float" vertex="1">
+          <mxGeometry height="30" width="660" y="96" as="geometry" />
+        </mxCell>
+        <mxCell id="feeler-a4" parent="feeler" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ Extent: float" vertex="1">
+          <mxGeometry height="30" width="660" y="126" as="geometry" />
+        </mxCell>
+        <mxCell id="feeler-a5" parent="feeler" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ TraceInterval: int32" vertex="1">
+          <mxGeometry height="30" width="660" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="feeler-a6" parent="feeler" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ FramesUntilNextTrace: int32" vertex="1">
+          <mxGeometry height="30" width="660" y="186" as="geometry" />
+        </mxCell>
+        <mxCell id="pawndata" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="ULyraPawnData" vertex="1">
+          <mxGeometry height="66" width="580" x="40" y="1500" as="geometry" />
+        </mxCell>
+        <mxCell id="pawndata-a1" parent="pawndata" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ DefaultCameraMode: TSubclassOf&amp;lt;ULyraCameraMode&amp;gt;" vertex="1">
+          <mxGeometry height="30" width="580" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="assist" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="«interface» ILyraCameraAssistInterface" vertex="1">
+          <mxGeometry height="96" width="660" x="1400" y="1500" as="geometry" />
+        </mxCell>
+        <mxCell id="assist-m1" parent="assist" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ GetCameraPreventPenetrationTarget(): TOptional&amp;lt;AActor*&amp;gt;" vertex="1">
+          <mxGeometry height="30" width="660" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="assist-m2" parent="assist" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ OnCameraPenetratingTarget(): void" vertex="1">
+          <mxGeometry height="30" width="660" y="66" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e1" edge="1" parent="1" source="pcm" style="endArrow=block;endSize=16;endFill=0;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;exitX=0.5;exitY=0;entryX=0.5;entryY=1;sourcePerimeterSpacing=4;targetPerimeterSpacing=4;horizontalStack=0;" target="pcm-base" value="继承">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e2" edge="1" parent="1" source="ui" style="endArrow=block;endSize=16;endFill=0;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;exitX=0.5;exitY=0;entryX=0.5;entryY=1;sourcePerimeterSpacing=4;targetPerimeterSpacing=4;horizontalStack=0;" target="actorcomp" value="继承">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e3" edge="1" parent="1" source="pcm-a1" style="startArrow=diamond;startFill=1;endArrow=none;html=1;rounded=0;strokeColor=#b85450;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;entryX=0;entryY=0.5;sourcePerimeterSpacing=4;targetPerimeterSpacing=4;horizontalStack=0;exitDx=0;exitDy=0;" target="ui" value="组合：UICamera">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e4" edge="1" parent="1" source="cam" style="endArrow=block;endSize=16;endFill=0;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;exitX=0.5;exitY=0;entryX=0.5;entryY=1;sourcePerimeterSpacing=4;targetPerimeterSpacing=4;horizontalStack=0;" target="cam-base" value="继承">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e5" edge="1" parent="1" source="stack" style="endArrow=block;endSize=16;endFill=0;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;exitX=0.5;exitY=0;entryX=0.5;entryY=1;sourcePerimeterSpacing=4;targetPerimeterSpacing=4;horizontalStack=0;" target="object" value="继承">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e6" edge="1" parent="1" source="mode" style="endArrow=block;endSize=16;endFill=0;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;exitX=0.5;exitY=0;entryX=0.5;entryY=1;sourcePerimeterSpacing=4;targetPerimeterSpacing=4;horizontalStack=0;" target="object" value="继承">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e7" edge="1" parent="1" source="cam" style="startArrow=diamond;startFill=1;endArrow=none;html=1;rounded=0;strokeColor=#b85450;edgeStyle=entityRelationEdgeStyle;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;entryX=0;entryY=0.5;sourcePerimeterSpacing=4;targetPerimeterSpacing=4;horizontalStack=0;" target="stack" value="组合：CameraModeStack">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e8" edge="1" parent="1" source="stack-a3" style="startArrow=diamond;startFill=1;endArrow=none;html=1;rounded=0;strokeColor=#b85450;edgeStyle=entityRelationEdgeStyle;orthogonalLoop=1;jettySize=auto;entryX=0;entryY=0;sourcePerimeterSpacing=4;targetPerimeterSpacing=4;horizontalStack=0;entryDx=0;entryDy=0;" target="mode" value="组合：模式实例与活动栈">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e9" edge="1" parent="1" source="character" style="endArrow=block;endSize=16;endFill=0;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;exitX=0.5;exitY=0;entryX=0.5;entryY=1;sourcePerimeterSpacing=4;targetPerimeterSpacing=4;horizontalStack=0;" target="modular" value="继承">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e10" edge="1" parent="1" source="character" style="startArrow=diamond;startFill=1;endArrow=none;html=1;rounded=0;strokeColor=#b85450;edgeStyle=entityRelationEdgeStyle;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;entryX=0;entryY=0.5;sourcePerimeterSpacing=4;targetPerimeterSpacing=4;horizontalStack=0;" target="cam" value="组合：CameraComponent">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e11" edge="1" parent="1" source="lyrapc" style="endArrow=block;endSize=16;endFill=0;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;exitX=0.5;exitY=0;entryX=0.5;entryY=1;sourcePerimeterSpacing=4;targetPerimeterSpacing=4;horizontalStack=0;" target="commonpc" value="继承">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e12" edge="1" parent="1" source="ability" style="endArrow=block;endSize=16;endFill=0;html=1;dashed=1;rounded=0;exitX=0.5;exitY=0;entryX=0.5;entryY=1;horizontalStack=0;" target="assist" value="实现">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e13" edge="1" parent="1" source="hero" style="endArrow=block;endSize=16;endFill=0;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;exitX=0.5;exitY=0;entryX=0.5;entryY=1;sourcePerimeterSpacing=4;targetPerimeterSpacing=4;horizontalStack=0;" target="pawncomp" value="继承">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e14" edge="1" parent="1" source="hero" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;entryX=0;entryY=0.5;sourcePerimeterSpacing=4;targetPerimeterSpacing=4;horizontalStack=0;" target="cam" value="绑定 DetermineCameraModeDelegate">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e15" edge="1" parent="1" source="third" style="endArrow=block;endSize=16;endFill=0;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;exitX=0.5;exitY=0;entryX=0.5;entryY=1;sourcePerimeterSpacing=4;targetPerimeterSpacing=4;horizontalStack=0;" target="mode" value="继承">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e16" edge="1" parent="1" source="topdown" style="endArrow=block;endSize=16;endFill=0;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;exitX=0.5;exitY=0;entryX=0.5;entryY=1;sourcePerimeterSpacing=4;targetPerimeterSpacing=4;horizontalStack=0;" target="mode" value="继承">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e17" edge="1" parent="1" source="mode-a1" style="startArrow=diamond;startFill=1;endArrow=none;html=1;rounded=0;strokeColor=#b85450;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;entryX=0;entryY=0.5;sourcePerimeterSpacing=4;targetPerimeterSpacing=4;horizontalStack=0;libavoidRouting=1;exitDx=0;exitDy=0;" target="view" value="组合：View">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="3810" y="361" />
+              <mxPoint x="3810" y="507" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p1-e18" edge="1" parent="1" source="third" style="startArrow=diamond;startFill=1;endArrow=none;html=1;rounded=0;strokeColor=#b85450;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;entryX=0;entryY=0.5;sourcePerimeterSpacing=4;targetPerimeterSpacing=4;horizontalStack=0;" target="feeler" value="组合：Feelers">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e19" edge="1" parent="1" source="hero" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;entryX=0;entryY=0.5;sourcePerimeterSpacing=4;targetPerimeterSpacing=4;horizontalStack=0;" target="pawndata" value="读取 DefaultCameraMode">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e20" edge="1" parent="1" source="ability" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;edgeStyle=entityRelationEdgeStyle;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;entryX=0;entryY=0.5;sourcePerimeterSpacing=4;targetPerimeterSpacing=4;horizontalStack=0;" target="hero" value="设置 AbilityCameraMode">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p1-e21" edge="1" parent="1" source="third" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;entryX=0;entryY=0.5;sourcePerimeterSpacing=4;targetPerimeterSpacing=4;horizontalStack=0;" target="assist" value="穿透目标与通知">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="UwhrEWZTS7UcUfEVCa-H-1" edge="1" parent="1" source="lyrapc" style="endArrow=block;endSize=16;endFill=0;html=1;dashed=1;rounded=0;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=0;entryX=0.5;entryY=1;horizontalStack=0;" target="ability" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-50" y="1002" as="sourcePoint" />
+            <mxPoint x="1200" y="1718" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ability" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="ULyraGameplayAbility" vertex="1">
+          <mxGeometry height="96" width="620" x="250" y="856" as="geometry" />
+        </mxCell>
+        <mxCell id="ability-m1" parent="ability" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ SetCameraMode(CameraMode): void" vertex="1">
+          <mxGeometry height="30" width="620" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="ability-m2" parent="ability" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ ClearCameraMode(): void" vertex="1">
+          <mxGeometry height="30" width="620" y="66" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="third-person-flow" name="2-第三人称相机实现链路">
+    <mxGraphModel dx="2039" dy="746" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" value="" />
+        <mxCell id="1" parent="0" value="" />
+        <mxCell id="p2-title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=22;fontStyle=1;whiteSpace=wrap;horizontalStack=0;" value="Lyra 第三人称相机具体实现链路 - 方法级 UML" vertex="1">
+          <mxGeometry height="44" width="2200" x="1000" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="p2-legend" parent="1" style="shape=note;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;horizontalStack=0;" value="&lt;b&gt;调用编号&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#6c8ebf&quot;&gt;I：输入与控制旋转&lt;/font&gt;　M：模式选择与入栈　V：每帧视图计算与混合　&lt;font color=&quot;#b85450&quot;&gt;P：遮挡碰撞处理&lt;/font&gt;　O：最终视角输出。&lt;br&gt;实线：直接调用/数据返回；虚线：委托或 Unreal Engine 框架边界。" vertex="1">
+          <mxGeometry height="135" width="900" x="3150" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="f-hero" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="ULyraHeroComponent　LyraGame C++" vertex="1">
+          <mxGeometry height="164" width="720" x="-392" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="f-hero-a1" parent="f-hero" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="- AbilityCameraMode: TSubclassOf&amp;lt;ULyraCameraMode&amp;gt;" vertex="1">
+          <mxGeometry height="30" width="720" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="f-hero-separator" parent="f-hero" style="line;strokeWidth=1;fillColor=none;rotatable=0;points=[];portConstraint=eastwest;strokeColor=inherit;movable=0;horizontalStack=0;" value="" vertex="1">
+          <mxGeometry height="8" width="720" y="66" as="geometry" />
+        </mxCell>
+        <mxCell id="f-hero-m1" parent="f-hero" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ Input_LookMouse(InputActionValue): void" vertex="1">
+          <mxGeometry height="30" width="720" y="74" as="geometry" />
+        </mxCell>
+        <mxCell id="f-hero-m2" parent="f-hero" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ Input_LookStick(InputActionValue): void" vertex="1">
+          <mxGeometry height="30" width="720" y="104" as="geometry" />
+        </mxCell>
+        <mxCell id="f-hero-m3" parent="f-hero" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ DetermineCameraMode(): TSubclassOf&amp;lt;ULyraCameraMode&amp;gt;" vertex="1">
+          <mxGeometry height="30" width="720" y="134" as="geometry" />
+        </mxCell>
+        <mxCell id="f-pawn" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="APawn　Unreal Engine" vertex="1">
+          <mxGeometry height="96" width="570" x="550" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="f-pawn-m1" parent="f-pawn" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ AddControllerYawInput(Value): void" vertex="1">
+          <mxGeometry height="30" width="570" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="f-pawn-m2" parent="f-pawn" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ AddControllerPitchInput(Value): void" vertex="1">
+          <mxGeometry height="30" width="570" y="66" as="geometry" />
+        </mxCell>
+        <mxCell id="f-controller" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="APlayerController / ALyraPlayerController" vertex="1">
+          <mxGeometry height="164" width="650" x="1490" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="f-controller-a1" parent="f-controller" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ ControlRotation: FRotator" vertex="1">
+          <mxGeometry height="30" width="650" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="f-controller-separator" parent="f-controller" style="line;strokeWidth=1;fillColor=none;rotatable=0;points=[];portConstraint=eastwest;strokeColor=inherit;movable=0;horizontalStack=0;" value="" vertex="1">
+          <mxGeometry height="8" width="650" y="66" as="geometry" />
+        </mxCell>
+        <mxCell id="f-controller-m1" parent="f-controller" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ AddYawInput(Value): void" vertex="1">
+          <mxGeometry height="30" width="650" y="74" as="geometry" />
+        </mxCell>
+        <mxCell id="f-controller-m2" parent="f-controller" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ AddPitchInput(Value): void" vertex="1">
+          <mxGeometry height="30" width="650" y="104" as="geometry" />
+        </mxCell>
+        <mxCell id="f-controller-m3" parent="f-controller" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ SetControlRotation(NewRotation): void" vertex="1">
+          <mxGeometry height="30" width="650" y="134" as="geometry" />
+        </mxCell>
+        <mxCell id="f-pawndata" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="ULyraPawnData　数据资产" vertex="1">
+          <mxGeometry height="66" width="620" x="2420" y="64" as="geometry" />
+        </mxCell>
+        <mxCell id="f-pawndata-a1" parent="f-pawndata" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ DefaultCameraMode: TSubclassOf&amp;lt;ULyraCameraMode&amp;gt;" vertex="1">
+          <mxGeometry height="30" width="620" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="f-ability" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="ULyraGameplayAbility　能力覆盖" vertex="1">
+          <mxGeometry height="96" width="620" x="2920" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="f-ability-m1" parent="f-ability" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ SetCameraMode(CameraMode): void" vertex="1">
+          <mxGeometry height="30" width="620" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="f-ability-m2" parent="f-ability" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ ClearCameraMode(): void" vertex="1">
+          <mxGeometry height="30" width="620" y="66" as="geometry" />
+        </mxCell>
+        <mxCell id="f-manager" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="ALyraPlayerCameraManager　LyraGame C++" vertex="1">
+          <mxGeometry height="104" width="720" x="-730" y="585" as="geometry" />
+        </mxCell>
+        <mxCell id="f-manager-a1" parent="f-manager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="- UICamera: ULyraUICameraManagerComponent*" vertex="1">
+          <mxGeometry height="30" width="720" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="f-manager-separator" parent="f-manager" style="line;strokeWidth=1;fillColor=none;rotatable=0;points=[];portConstraint=eastwest;strokeColor=inherit;movable=0;horizontalStack=0;" value="" vertex="1">
+          <mxGeometry height="8" width="720" y="66" as="geometry" />
+        </mxCell>
+        <mxCell id="f-manager-m1" parent="f-manager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="# UpdateViewTarget(OutVT, DeltaTime): void" vertex="1">
+          <mxGeometry height="30" width="720" y="74" as="geometry" />
+        </mxCell>
+        <mxCell id="f-camera" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="ULyraCameraComponent　LyraGame C++" vertex="1">
+          <mxGeometry height="194" width="780" x="422" y="570" as="geometry" />
+        </mxCell>
+        <mxCell id="f-camera-a1" parent="f-camera" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ DetermineCameraModeDelegate: FLyraCameraModeDelegate" vertex="1">
+          <mxGeometry height="30" width="780" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="f-camera-a2" parent="f-camera" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="- CameraModeStack: ULyraCameraModeStack*" vertex="1">
+          <mxGeometry height="30" width="780" y="66" as="geometry" />
+        </mxCell>
+        <mxCell id="f-camera-a3" parent="f-camera" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="- FieldOfViewOffset: float" vertex="1">
+          <mxGeometry height="30" width="780" y="96" as="geometry" />
+        </mxCell>
+        <mxCell id="f-camera-separator" parent="f-camera" style="line;strokeWidth=1;fillColor=none;rotatable=0;points=[];portConstraint=eastwest;strokeColor=inherit;movable=0;horizontalStack=0;" value="" vertex="1">
+          <mxGeometry height="8" width="780" y="126" as="geometry" />
+        </mxCell>
+        <mxCell id="f-camera-m1" parent="f-camera" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5,0,0,0],[1,0.5,0,0,0]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="# GetCameraView(DeltaTime, DesiredView): void" vertex="1">
+          <mxGeometry height="30" width="780" y="134" as="geometry" />
+        </mxCell>
+        <mxCell id="f-camera-m2" parent="f-camera" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="# UpdateCameraModes(): void" vertex="1">
+          <mxGeometry height="30" width="780" y="164" as="geometry" />
+        </mxCell>
+        <mxCell id="f-stack" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="ULyraCameraModeStack　LyraGame C++" vertex="1">
+          <mxGeometry height="224" width="760" x="1720" y="570" as="geometry" />
+        </mxCell>
+        <mxCell id="f-stack-a1" parent="f-stack" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="- CameraModeInstances: TArray&amp;lt;ULyraCameraMode*&amp;gt;" vertex="1">
+          <mxGeometry height="30" width="760" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="f-stack-a2" parent="f-stack" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="- CameraModeStack: TArray&amp;lt;ULyraCameraMode*&amp;gt;" vertex="1">
+          <mxGeometry height="30" width="760" y="66" as="geometry" />
+        </mxCell>
+        <mxCell id="f-stack-separator" parent="f-stack" style="line;strokeWidth=1;fillColor=none;rotatable=0;points=[];portConstraint=eastwest;strokeColor=inherit;movable=0;horizontalStack=0;" value="" vertex="1">
+          <mxGeometry height="8" width="760" y="96" as="geometry" />
+        </mxCell>
+        <mxCell id="f-stack-m1" parent="f-stack" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ PushCameraMode(CameraModeClass): void" vertex="1">
+          <mxGeometry height="30" width="760" y="104" as="geometry" />
+        </mxCell>
+        <mxCell id="f-stack-m2" parent="f-stack" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ EvaluateStack(DeltaTime, OutView): bool" vertex="1">
+          <mxGeometry height="30" width="760" y="134" as="geometry" />
+        </mxCell>
+        <mxCell id="f-stack-m3" parent="f-stack" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="- UpdateStack(DeltaTime): void" vertex="1">
+          <mxGeometry height="30" width="760" y="164" as="geometry" />
+        </mxCell>
+        <mxCell id="f-stack-m4" parent="f-stack" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="- BlendStack(OutView): void" vertex="1">
+          <mxGeometry height="30" width="760" y="194" as="geometry" />
+        </mxCell>
+        <mxCell id="f-third" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="ULyraCameraMode_ThirdPerson　LyraGame C++" vertex="1">
+          <mxGeometry height="284" width="800" x="3780" y="850" as="geometry" />
+        </mxCell>
+        <mxCell id="f-third-a1" parent="f-third" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="# TargetOffsetCurve / RuntimeFloatCurves" vertex="1">
+          <mxGeometry height="30" width="800" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="f-third-a2" parent="f-third" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="# PenetrationAvoidanceFeelers: TArray&amp;lt;FLyraPenetrationAvoidanceFeeler&amp;gt;" vertex="1">
+          <mxGeometry height="30" width="800" y="66" as="geometry" />
+        </mxCell>
+        <mxCell id="f-third-a3" parent="f-third" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="# AimLineToDesiredPosBlockedPct: float" vertex="1">
+          <mxGeometry height="30" width="800" y="96" as="geometry" />
+        </mxCell>
+        <mxCell id="f-third-separator" parent="f-third" style="line;strokeWidth=1;fillColor=none;rotatable=0;points=[];portConstraint=eastwest;strokeColor=inherit;movable=0;horizontalStack=0;" value="" vertex="1">
+          <mxGeometry height="8" width="800" y="126" as="geometry" />
+        </mxCell>
+        <mxCell id="f-third-m1" parent="f-third" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="# UpdateView(DeltaTime): void" vertex="1">
+          <mxGeometry height="30" width="800" y="134" as="geometry" />
+        </mxCell>
+        <mxCell id="f-third-m2" parent="f-third" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="- UpdateForTarget(DeltaTime): void" vertex="1">
+          <mxGeometry height="30" width="800" y="164" as="geometry" />
+        </mxCell>
+        <mxCell id="f-third-m3" parent="f-third" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="- UpdateCrouchOffset(DeltaTime): void" vertex="1">
+          <mxGeometry height="30" width="800" y="194" as="geometry" />
+        </mxCell>
+        <mxCell id="f-third-m4" parent="f-third" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="- UpdatePreventPenetration(DeltaTime): void" vertex="1">
+          <mxGeometry height="30" width="800" y="224" as="geometry" />
+        </mxCell>
+        <mxCell id="f-third-m5" parent="f-third" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5,0,0,0],[1,0.5,0,0,0]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="- PreventCameraPenetration(...): void" vertex="1">
+          <mxGeometry height="30" width="800" y="254" as="geometry" />
+        </mxCell>
+        <mxCell id="f-mode" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="ULyraCameraMode　LyraGame C++" vertex="1">
+          <mxGeometry height="194" width="700" x="3820" y="276" as="geometry" />
+        </mxCell>
+        <mxCell id="f-mode-a1" parent="f-mode" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="# View: FLyraCameraModeView" vertex="1">
+          <mxGeometry height="30" width="700" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="f-mode-a2" parent="f-mode" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="# BlendTime / BlendAlpha / BlendWeight: float" vertex="1">
+          <mxGeometry height="30" width="700" y="66" as="geometry" />
+        </mxCell>
+        <mxCell id="f-mode-separator" parent="f-mode" style="line;strokeWidth=1;fillColor=none;rotatable=0;points=[];portConstraint=eastwest;strokeColor=inherit;movable=0;horizontalStack=0;" value="" vertex="1">
+          <mxGeometry height="8" width="700" y="96" as="geometry" />
+        </mxCell>
+        <mxCell id="f-mode-m1" parent="f-mode" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ UpdateCameraMode(DeltaTime): void" vertex="1">
+          <mxGeometry height="30" width="700" y="104" as="geometry" />
+        </mxCell>
+        <mxCell id="f-mode-m2" parent="f-mode" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="# UpdateView(DeltaTime): void" vertex="1">
+          <mxGeometry height="30" width="700" y="134" as="geometry" />
+        </mxCell>
+        <mxCell id="f-mode-m3" parent="f-mode" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="# UpdateBlending(DeltaTime): void" vertex="1">
+          <mxGeometry height="30" width="700" y="164" as="geometry" />
+        </mxCell>
+        <mxCell id="f-view" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="FLyraCameraModeView　状态结果" vertex="1">
+          <mxGeometry height="194" width="680" x="1540" y="1200" as="geometry" />
+        </mxCell>
+        <mxCell id="f-view-a1" parent="f-view" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ Location: FVector" vertex="1">
+          <mxGeometry height="30" width="680" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="f-view-a2" parent="f-view" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ Rotation: FRotator" vertex="1">
+          <mxGeometry height="30" width="680" y="66" as="geometry" />
+        </mxCell>
+        <mxCell id="f-view-a3" parent="f-view" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ ControlRotation: FRotator" vertex="1">
+          <mxGeometry height="30" width="680" y="96" as="geometry" />
+        </mxCell>
+        <mxCell id="f-view-a4" parent="f-view" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ FieldOfView: float" vertex="1">
+          <mxGeometry height="30" width="680" y="126" as="geometry" />
+        </mxCell>
+        <mxCell id="f-view-separator" parent="f-view" style="line;strokeWidth=1;fillColor=none;rotatable=0;points=[];portConstraint=eastwest;strokeColor=inherit;movable=0;horizontalStack=0;" value="" vertex="1">
+          <mxGeometry height="8" width="680" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="f-view-m1" parent="f-view" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ Blend(Other, OtherWeight): void" vertex="1">
+          <mxGeometry height="30" width="680" y="164" as="geometry" />
+        </mxCell>
+        <mxCell id="f-feeler" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="FLyraPenetrationAvoidanceFeeler　碰撞探针" vertex="1">
+          <mxGeometry height="156" width="720" x="2600" y="1260" as="geometry" />
+        </mxCell>
+        <mxCell id="f-feeler-a1" parent="f-feeler" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ AdjustmentRot: FRotator" vertex="1">
+          <mxGeometry height="30" width="720" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="f-feeler-a2" parent="f-feeler" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ WorldWeight / PawnWeight: float" vertex="1">
+          <mxGeometry height="30" width="720" y="66" as="geometry" />
+        </mxCell>
+        <mxCell id="f-feeler-a3" parent="f-feeler" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ Extent: float" vertex="1">
+          <mxGeometry height="30" width="720" y="96" as="geometry" />
+        </mxCell>
+        <mxCell id="f-feeler-a4" parent="f-feeler" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ TraceInterval / FramesUntilNextTrace: int32" vertex="1">
+          <mxGeometry height="30" width="720" y="126" as="geometry" />
+        </mxCell>
+        <mxCell id="f-assist" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="«interface» ILyraCameraAssistInterface" vertex="1">
+          <mxGeometry height="96" width="700" x="4910" y="1230" as="geometry" />
+        </mxCell>
+        <mxCell id="f-assist-m1" parent="f-assist" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ GetCameraPreventPenetrationTarget(): TOptional&amp;lt;AActor*&amp;gt;" vertex="1">
+          <mxGeometry height="30" width="700" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="f-assist-m2" parent="f-assist" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ OnCameraPenetratingTarget(): void" vertex="1">
+          <mxGeometry height="30" width="700" y="66" as="geometry" />
+        </mxCell>
+        <mxCell id="f-minimal" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;container=1;dropTarget=1;recursiveResize=0;swimlaneLine=1;" value="FMinimalViewInfo / FTViewTarget　最终输出" vertex="1">
+          <mxGeometry height="156" width="720" x="620" y="1260" as="geometry" />
+        </mxCell>
+        <mxCell id="f-minimal-a1" parent="f-minimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ Location: FVector" vertex="1">
+          <mxGeometry height="30" width="720" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="f-minimal-a2" parent="f-minimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ Rotation: FRotator" vertex="1">
+          <mxGeometry height="30" width="720" y="66" as="geometry" />
+        </mxCell>
+        <mxCell id="f-minimal-a3" parent="f-minimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ FOV: float" vertex="1">
+          <mxGeometry height="30" width="720" y="96" as="geometry" />
+        </mxCell>
+        <mxCell id="f-minimal-a4" parent="f-minimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;movable=0;horizontalStack=0;" value="+ PostProcessSettings: FPostProcessSettings" vertex="1">
+          <mxGeometry height="30" width="720" y="126" as="geometry" />
+        </mxCell>
+        <mxCell id="i1" edge="1" parent="1" source="f-hero-m1" style="endArrow=block;endFill=1;html=1;rounded=0;edgeStyle=entityRelationEdgeStyle;strokeColor=#6c8ebf;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;horizontalStack=0;" target="f-pawn-m1" value="I1：鼠标 Look X/Y">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i2" edge="1" parent="1" source="f-hero-m2" style="endArrow=block;endFill=1;html=1;rounded=0;edgeStyle=entityRelationEdgeStyle;strokeColor=#6c8ebf;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;horizontalStack=0;" target="f-pawn-m2" value="I2：手柄 Look × Rate × DeltaSeconds">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="i3" edge="1" parent="1" source="f-pawn-m1" style="endArrow=block;endFill=1;html=1;rounded=0;edgeStyle=entityRelationEdgeStyle;strokeColor=#6c8ebf;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;horizontalStack=0;" target="f-controller-a1" value="I3：转发 Yaw/Pitch 输入，更新 ControlRotation">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c1" edge="1" parent="1" source="f-manager-m1" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;edgeStyle=entityRelationEdgeStyle;strokeColor=#666666;exitX=1;exitY=0.5;entryX=0;entryY=0.5;horizontalStack=0;" value="V1：UE ViewTarget / CalcCamera 边界">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="425" y="719" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m1" edge="1" parent="1" source="f-camera-m1" style="endArrow=block;endFill=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;exitX=1;exitY=0.319;entryX=0;entryY=0.5;horizontalStack=0;exitDx=0;exitDy=0;exitPerimeter=0;" target="f-camera-m2" value="M1：每帧选择相机模式">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1260.06" y="713.6" />
+              <mxPoint x="1260.06" y="909.99" />
+              <mxPoint x="350.06" y="909.99" />
+              <mxPoint x="350.06" y="749" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m2" edge="1" parent="1" source="f-camera-m2" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;edgeStyle=entityRelationEdgeStyle;strokeColor=#666666;exitX=1;exitY=0.5;entryX=0;entryY=0.5;horizontalStack=0;" target="f-hero-m3" value="M2：执行 DetermineCameraModeDelegate">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m3a" edge="1" parent="1" source="f-ability-m1" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;strokeColor=#666666;exitX=1;exitY=0.5;entryX=1;entryY=0.278;horizontalStack=0;libavoidRouting=1;entryDx=0;entryDy=0;entryPerimeter=0;" target="f-hero-m3" value="M3：AbilityCameraMode 优先">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="3556" y="231" />
+              <mxPoint x="3556" y="310" />
+              <mxPoint x="909" y="310" />
+              <mxPoint x="909" y="272.33" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m3b" edge="1" parent="1" source="f-hero-m3" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;strokeColor=#666666;exitX=1;exitY=0.5;entryX=0;entryY=0.5;horizontalStack=0;libavoidRouting=1;" target="f-pawndata-a1" value="M3：否则读取 DefaultCameraMode">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="439" y="279" />
+              <mxPoint x="439" y="114" />
+              <mxPoint x="2280" y="114" />
+              <mxPoint x="2280" y="115" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m4" edge="1" parent="1" source="f-hero-m3" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;edgeStyle=entityRelationEdgeStyle;strokeColor=#666666;exitX=1;exitY=0.5;entryX=0;entryY=0.5;horizontalStack=0;" target="f-camera-m2" value="M4：委托返回选中的 CameraModeClass">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m5" edge="1" parent="1" source="f-camera-m2" style="endArrow=block;endFill=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;exitX=1;exitY=0.5;entryX=0;entryY=0.5;horizontalStack=0;" target="f-stack-m1" value="M5：PushCameraMode；复用实例并设初始权重">
+          <mxGeometry relative="1" x="0.2042" y="9" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="v2" edge="1" parent="1" source="f-camera-m1" style="endArrow=block;endFill=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;exitX=1;exitY=0.5;entryX=0;entryY=0.5;horizontalStack=0;" target="f-stack-m2" value="V2：EvaluateStack(DeltaTime)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="v3" edge="1" parent="1" source="f-stack-m2" style="endArrow=block;endFill=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;exitX=1;exitY=0.5;entryX=0;entryY=0.5;horizontalStack=0;" target="f-stack-m3" value="V3：UpdateStack">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2530.06" y="719.06" />
+              <mxPoint x="2530.06" y="860" />
+              <mxPoint x="1660.06" y="860" />
+              <mxPoint x="1660.06" y="749.06" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="v4" edge="1" parent="1" source="f-stack-m3" style="endArrow=block;endFill=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;exitX=1;exitY=0.5;entryX=0;entryY=0.5;horizontalStack=0;" target="f-mode-m1" value="V4：逐模式 UpdateCameraMode">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="v5" edge="1" parent="1" source="f-mode-m1" style="endArrow=block;endFill=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;exitX=1;exitY=0.5;entryX=0;entryY=0.5;horizontalStack=0;" target="f-third-m1" value="V5：虚函数分派到第三人称 UpdateView">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="4620.06" y="395.06" />
+              <mxPoint x="4620.06" y="697.06" />
+              <mxPoint x="3670.06" y="697.06" />
+              <mxPoint x="3670.06" y="999.06" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="v6" edge="1" parent="1" style="endArrow=block;endFill=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;entryX=0;entryY=0.5;horizontalStack=0;" target="f-third-m2" value="V6：蹲伏目标状态与平滑偏移">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="4580.01" y="1010.01" />
+              <mxPoint x="4650.01" y="1010.01" />
+              <mxPoint x="4650.01" y="1240.01" />
+              <mxPoint x="3720.01" y="1240.01" />
+              <mxPoint x="3720.01" y="1029" />
+            </Array>
+            <mxPoint x="4590" y="1010" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="v7" edge="1" parent="1" source="f-third-m2" style="endArrow=block;endFill=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;exitX=1;exitY=0.5;entryX=0;entryY=0.5;horizontalStack=0;" target="f-third-m3" value="V7：UpdateCrouchOffset">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="4640" y="1029" />
+              <mxPoint x="4640" y="1220" />
+              <mxPoint x="3730" y="1220" />
+              <mxPoint x="3730" y="1059" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="v8" edge="1" parent="1" source="f-controller-a1" style="endArrow=block;endFill=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;strokeColor=#6c8ebf;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;horizontalStack=0;libavoidRouting=1;" target="f-third-m1" value="V8：Pivot + Pitch Clamp + Pitch Offset Curve">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2700" y="181" />
+              <mxPoint x="2700" y="999" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p1" edge="1" parent="1" source="f-third-m1" style="endArrow=block;endFill=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;strokeColor=#b85450;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;horizontalStack=0;" target="f-third-m4" value="P1：UpdatePreventPenetration">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="4680.06" y="999.06" />
+              <mxPoint x="4680.06" y="1350" />
+              <mxPoint x="3700.06" y="1350" />
+              <mxPoint x="3700.06" y="1089.06" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p2" edge="1" parent="1" source="f-third-m4" style="endArrow=block;endFill=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;strokeColor=#b85450;strokeWidth=2;horizontalStack=0;" target="f-third-m5" value="P2：计算 SafeLocation；Sweep ECC_Camera">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="4670.06" y="1089.06" />
+              <mxPoint x="4670.06" y="1320" />
+              <mxPoint x="3710.06" y="1320" />
+              <mxPoint x="3710.06" y="1130" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p3" edge="1" parent="1" source="f-feeler" style="endArrow=block;endFill=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;strokeColor=#b85450;strokeWidth=2;horizontalStack=0;" target="f-third-m5" value="P3：探针角度、半径、权重与追踪间隔">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p4" edge="1" parent="1" source="f-third-m5" style="endArrow=block;endFill=1;html=1;rounded=0;edgeStyle=entityRelationEdgeStyle;strokeColor=#b85450;strokeWidth=2;horizontalStack=0;" target="f-assist-m2" value="P4：过近时通知控制器/目标">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="v9" edge="1" parent="1" source="f-third-m1" style="endArrow=block;endFill=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;exitX=1;exitY=0.5;entryX=0;entryY=0.5;horizontalStack=0;" target="f-mode-m3" value="V9：返回后 UpdateBlending">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="v10" edge="1" parent="1" source="f-mode-m3" style="endArrow=block;endFill=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;exitX=1;exitY=0.5;entryX=0;entryY=0.5;horizontalStack=0;" target="f-stack-m4" value="V10：自底向顶 BlendStack">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="4536.06" y="455.06" />
+              <mxPoint x="4536.06" y="538" />
+              <mxPoint x="1640.06" y="538" />
+              <mxPoint x="1640.06" y="779.06" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="v11" edge="1" parent="1" source="f-stack-m4" style="endArrow=block;endFill=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;exitX=1;exitY=0.5;entryX=0;entryY=0.5;horizontalStack=0;" target="f-view-m1" value="V11：FLyraCameraModeView::Blend">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="v12" edge="1" parent="1" source="f-view" style="endArrow=block;endFill=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;exitX=1;exitY=0.5;entryX=0;entryY=0.5;horizontalStack=0;" target="f-camera-m1" value="V12：返回 CameraModeView">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2320.06" y="1297.06" />
+              <mxPoint x="2320.06" y="967.06" />
+              <mxPoint x="310.06" y="967.06" />
+              <mxPoint x="310.06" y="719.06" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="o1" edge="1" parent="1" source="f-camera-m1" style="endArrow=block;endFill=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;strokeColor=#82b366;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;horizontalStack=0;" target="f-controller-m3" value="O1：同步 PC::SetControlRotation">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="o2" edge="1" parent="1" source="f-camera-m1" style="endArrow=block;endFill=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;strokeColor=#82b366;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;horizontalStack=0;" target="f-minimal" value="O2：同步组件 WorldLocation / Rotation / FOV，并填充 DesiredView">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1240" y="719" />
+              <mxPoint x="1240" y="1150" />
+              <mxPoint x="610" y="1150" />
+              <mxPoint x="610" y="1338" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="o3" edge="1" parent="1" source="f-minimal" style="endArrow=block;endFill=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;strokeColor=#82b366;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;horizontalStack=0;" target="f-manager-m1" value="O3：PlayerCameraManager 输出最终 FTViewTarget">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1350.06" y="1338.01" />
+              <mxPoint x="1350.06" y="989.52" />
+              <mxPoint x="-790.06" y="989.52" />
+              <mxPoint x="-789.99" y="674.01" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="flow-summary" parent="1" style="shape=note;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;horizontalStack=0;" value="&lt;b&gt;第三人称每帧数据流&lt;/b&gt;&lt;br&gt;Look 输入 → Controller.ControlRotation → Hero 选择 AbilityCameraMode / PawnData.DefaultCameraMode → CameraModeStack 入栈 → ThirdPerson 计算 Pivot、蹲伏偏移和基于 Pitch 的 TargetOffset → ECC_Camera 探针修正遮挡 → 模式权重混合为 FLyraCameraModeView → 同步控制旋转与 CameraComponent → FMinimalViewInfo / FTViewTarget。&lt;br&gt;&lt;br&gt;&lt;b&gt;实现边界&lt;/b&gt;&lt;br&gt;UI 相机由 ALyraPlayerCameraManager::UpdateViewTarget 给予优先级；本页主链描述普通玩家第三人称相机。相机输入不直接移动 CameraComponent，而是先改变控制旋转；最终组件位置、旋转和 FOV 在 GetCameraView 中写入。" vertex="1">
+          <mxGeometry height="190" width="4060" x="40" y="1770" as="geometry" />
+        </mxCell>
+        <mxCell id="source-note" parent="1" style="shape=note;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;horizontalStack=0;" value="&lt;b&gt;代码位置&lt;/b&gt;&lt;br&gt;Source/LyraGame/Character/LyraHeroComponent.cpp　|　Source/LyraGame/Character/LyraCharacter.cpp　|　Source/LyraGame/Camera/LyraCameraComponent.cpp　|　Source/LyraGame/Camera/LyraCameraMode.cpp　|　Source/LyraGame/Camera/LyraCameraMode_ThirdPerson.cpp　|　Source/LyraGame/Camera/LyraPlayerCameraManager.cpp" vertex="1">
+          <mxGeometry height="110" width="4060" x="40" y="2000" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
