@@ -1,0 +1,306 @@
+<mxfile host="Electron" modified="2026-08-31T00:00:00.000Z" agent="Codex" version="24.7.17" pages="3">
+  <diagram name="动画同步总览" id="lyra-animation-overview">
+    <mxGraphModel dx="1820" dy="1080" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="overview-title" parent="1" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=24;fontStyle=1;" value="Lyra 动画同步：同步输入状态，各端本地求姿态" vertex="1">
+          <mxGeometry x="20" y="20" width="920" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="overview-principle" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=14;" value="&lt;div&gt;&lt;b&gt;核心原则&lt;/b&gt;&lt;/div&gt;&lt;div&gt;Lyra 不逐帧复制骨骼 Transform，也不复制完整 AnimGraph 状态。&lt;/div&gt;&lt;div&gt;网络层复制：位置、旋转、速度、移动模式、压缩加速度、视角、GameplayTag、Ability/Montage 状态。&lt;/div&gt;&lt;div&gt;表现层计算：每个客户端的 ABP_Mannequin_Base 与 Linked Anim Layers 根据这些输入独立求值。&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;因此：网络同步解决“状态一致”；Sync Group / Sync Marker 只解决单机 AnimInstance 内部的动画相位一致。&lt;/div&gt;" vertex="1">
+          <mxGeometry x="20" y="90" width="920" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="overview-owner" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;Autonomous Proxy（拥有者客户端）&lt;/b&gt;&lt;/div&gt;&lt;div&gt;1. 输入立即驱动 CharacterMovement 本地预测&lt;/div&gt;&lt;div&gt;2. 预测 Ability 可立即播放 Montage&lt;/div&gt;&lt;div&gt;3. 本地视角直接用于 Aim Offset&lt;/div&gt;&lt;div&gt;4. 服务端修正到来时回滚/重演移动&lt;/div&gt;" vertex="1">
+          <mxGeometry x="20" y="330" width="350" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="overview-server" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;Authority（服务器）&lt;/b&gt;&lt;/div&gt;&lt;div&gt;1. 校验并执行权威移动&lt;/div&gt;&lt;div&gt;2. PreReplication 压缩当前加速度&lt;/div&gt;&lt;div&gt;3. 复制 SharedRepMovement / ViewRotation / ASC 状态&lt;/div&gt;&lt;div&gt;4. 确认 Ability 与 Montage，决定 Root Motion 结果&lt;/div&gt;" vertex="1">
+          <mxGeometry x="500" y="330" width="380" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="overview-proxy" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;Simulated Proxy（其他客户端上的角色）&lt;/b&gt;&lt;/div&gt;&lt;div&gt;1. OnRep_ReplicatedMovement 接收位置/速度/模式&lt;/div&gt;&lt;div&gt;2. OnRep_ReplicatedAcceleration 恢复加速度&lt;/div&gt;&lt;div&gt;3. OnRep_ReplicatedAnimMontage 对齐 Montage&lt;/div&gt;&lt;div&gt;4. AnimBP 使用复制输入重新计算最终姿态&lt;/div&gt;" vertex="1">
+          <mxGeometry x="1010" y="330" width="400" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="overview-edge-owner-server" edge="1" parent="1" source="overview-owner" target="overview-server" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="overview-edge-server-proxy" edge="1" parent="1" source="overview-server" target="overview-proxy" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="overview-movement" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;① 移动输入链&lt;/b&gt;&lt;/div&gt;&lt;div&gt;CharacterMovement 内建预测/校正&lt;/div&gt;&lt;div&gt;+ FSharedRepMovement&lt;/div&gt;&lt;div&gt;+ FLyraReplicatedAcceleration&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;驱动：速度、方向、步态、起停、转向、落地&lt;/div&gt;" vertex="1">
+          <mxGeometry x="20" y="600" width="300" height="190" as="geometry" />
+        </mxCell>
+        <mxCell id="overview-view" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;② 视角输入链&lt;/b&gt;&lt;/div&gt;&lt;div&gt;PlayerController::Tick&lt;/div&gt;&lt;div&gt;→ PlayerState::ReplicatedViewRotation&lt;/div&gt;&lt;div&gt;→ 复制条件 COND_SkipOwner&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;驱动：Aim Offset、上半身俯仰、观战视角&lt;/div&gt;" vertex="1">
+          <mxGeometry x="370" y="600" width="320" height="190" as="geometry" />
+        </mxCell>
+        <mxCell id="overview-tags" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;③ ASC / GameplayTag 链&lt;/b&gt;&lt;/div&gt;&lt;div&gt;Ability / GameplayEffect 改变 Tag&lt;/div&gt;&lt;div&gt;→ ASC 复制状态&lt;/div&gt;&lt;div&gt;→ GameplayTagBlueprintPropertyMap&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;驱动：ADS、死亡、移动受限、技能状态&lt;/div&gt;" vertex="1">
+          <mxGeometry x="740" y="600" width="320" height="190" as="geometry" />
+        </mxCell>
+        <mxCell id="overview-montage" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;④ Ability Montage 链&lt;/b&gt;&lt;/div&gt;&lt;div&gt;AbilityTask_PlayMontageAndWait&lt;/div&gt;&lt;div&gt;→ ASC RepAnimMontage&lt;/div&gt;&lt;div&gt;→ 模拟代理播放/校正 Section 与 Position&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;驱动：冲刺、近战、装填、受击、死亡&lt;/div&gt;" vertex="1">
+          <mxGeometry x="1110" y="600" width="330" height="190" as="geometry" />
+        </mxCell>
+        <mxCell id="overview-output" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=14;" value="&lt;div&gt;&lt;b&gt;本地动画求值结果&lt;/b&gt;&lt;/div&gt;&lt;div&gt;ABP_Mannequin_Base：Locomotion 状态机、姿态选择、GroundDistance、Turn In Place&lt;/div&gt;&lt;div&gt;Linked Anim Layers：Unarmed / Pistol / Rifle / Shotgun 对步态与上半身逻辑进行替换&lt;/div&gt;&lt;div&gt;Slot / Montage：叠加技能动作；必要时输出 Root Motion 给 CharacterMovement&lt;/div&gt;&lt;div&gt;Sync Group / Marker：让本机的走、跑、转向片段保持脚步相位，不承担跨网络复制&lt;/div&gt;" vertex="1">
+          <mxGeometry x="310" y="900" width="860" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="overview-edge-movement-output" edge="1" parent="1" source="overview-movement" target="overview-output" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=0.5;exitY=1;entryX=0.15;entryY=0;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="overview-edge-view-output" edge="1" parent="1" source="overview-view" target="overview-output" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=0.5;exitY=1;entryX=0.38;entryY=0;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="overview-edge-tags-output" edge="1" parent="1" source="overview-tags" target="overview-output" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=0.5;exitY=1;entryX=0.62;entryY=0;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="overview-edge-montage-output" edge="1" parent="1" source="overview-montage" target="overview-output" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=0.5;exitY=1;entryX=0.85;entryY=0;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="Lyra动画同步的逻辑流程解释" id="lyra-animation-code-flow">
+    <mxGraphModel dx="8350" dy="3160" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="flow-title" parent="1" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=24;fontStyle=1;" value="Lyra 动画同步的源码逻辑流程" vertex="1">
+          <mxGeometry x="-1490" y="-2740" width="1000" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="flow-entry" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;每帧入口 / 状态变化入口&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;A. CharacterMovement::TickComponent(DeltaTime)&lt;/div&gt;&lt;div&gt;　消费输入，按网络角色执行预测、权威移动或模拟&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;B. PlayerController::Tick(DeltaSeconds)&lt;/div&gt;&lt;div&gt;　更新玩家的 ViewRotation&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;C. Gameplay Ability / Gameplay Effect&lt;/div&gt;&lt;div&gt;　改变 GameplayTag，或启动 Montage / RootMotion Task&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;D. Equipment 状态变化&lt;/div&gt;&lt;div&gt;　选择武器对应的 Linked Anim Layer&lt;/div&gt;" vertex="1">
+          <mxGeometry x="-1490" y="-2510" width="460" height="430" as="geometry" />
+        </mxCell>
+        <mxCell id="flow-move-owner" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;Autonomous Proxy：本地预测移动&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;FUNCTION ReplicateMoveToServer(DeltaTime, Acceleration):&lt;/div&gt;&lt;div&gt;　1. 生成 FSavedMove，记录输入、加速度、位置、时间戳&lt;/div&gt;&lt;div&gt;　2. 本地执行 PerformMovement，角色立即响应&lt;/div&gt;&lt;div&gt;　3. 合并可合并的旧 Move，减少 RPC 数量&lt;/div&gt;&lt;div&gt;　4. 通过 ServerMove RPC 发送移动数据&lt;/div&gt;&lt;div&gt;　5. 收到服务端修正时，回滚到权威状态并重演未确认 Move&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;动画意义：拥有者不等待网络，AnimBP 立即读取本地 Velocity / Acceleration。&lt;/div&gt;" vertex="1">
+          <mxGeometry x="-820" y="-2510" width="470" height="430" as="geometry" />
+        </mxCell>
+        <mxCell id="flow-move-server" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;Authority：验证并执行权威移动&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;ServerMove / ServerMovePacked:&lt;/div&gt;&lt;div&gt;　1. 还原客户端时间戳、输入和加速度&lt;/div&gt;&lt;div&gt;　2. MoveAutonomous → PerformMovement&lt;/div&gt;&lt;div&gt;　3. 比较客户端报告位置与服务器结果&lt;/div&gt;&lt;div&gt;　4. 超过容差时发送 ClientAdjustPosition&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;服务端最终持有权威 Location、Rotation、Velocity、MovementMode、Crouch、JumpForce。&lt;/div&gt;" vertex="1">
+          <mxGeometry x="-140" y="-2510" width="460" height="430" as="geometry" />
+        </mxCell>
+        <mxCell id="flow-pre-rep" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;ALyraCharacter::PreReplication&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;CurrentAccel = MovementComponent-&amp;gt;GetCurrentAcceleration()&lt;/div&gt;&lt;div&gt;CartesianToPolar(XY) → 方向 + 大小&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;AccelXYRadians:&lt;/div&gt;&lt;div&gt;　[0, 2π] → uint8 [0, 255]&lt;/div&gt;&lt;div&gt;AccelXYMagnitude:&lt;/div&gt;&lt;div&gt;　[0, MaxAccel] → uint8 [0, 255]&lt;/div&gt;&lt;div&gt;AccelZ:&lt;/div&gt;&lt;div&gt;　[-MaxAccel, MaxAccel] → int8 [-127, 127]&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;DOREPLIFETIME_CONDITION(ReplicatedAcceleration, COND_SimulatedOnly)&lt;/div&gt;" vertex="1">
+          <mxGeometry x="520" y="-2600" width="470" height="520" as="geometry" />
+        </mxCell>
+        <mxCell id="flow-shared-rep" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;ALyraCharacter::UpdateSharedReplication&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;FSharedRepMovement::FillForCharacter(this):&lt;/div&gt;&lt;div&gt;　RepMovement.Location&lt;/div&gt;&lt;div&gt;　RepMovement.Rotation&lt;/div&gt;&lt;div&gt;　RepMovement.LinearVelocity&lt;/div&gt;&lt;div&gt;　RepMovementMode&lt;/div&gt;&lt;div&gt;　bProxyIsJumpForceApplied&lt;/div&gt;&lt;div&gt;　bIsCrouched&lt;/div&gt;&lt;div&gt;　RepTimeStamp&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;仅在数据变化时调用 FastSharedReplication，未变化的 Bunch 可被复用。&lt;/div&gt;" vertex="1">
+          <mxGeometry x="1190" y="-2550" width="440" height="430" as="geometry" />
+        </mxCell>
+        <mxCell id="flow-sim-proxy" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;Simulated Proxy：恢复移动输入&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;FastSharedReplication_Implementation:&lt;/div&gt;&lt;div&gt;　设置时间戳与 MovementMode&lt;/div&gt;&lt;div&gt;　写入 ReplicatedMovement&lt;/div&gt;&lt;div&gt;　调用 OnRep_ReplicatedMovement()&lt;/div&gt;&lt;div&gt;　恢复 JumpForce 与 Crouch&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;OnRep_ReplicatedAcceleration:&lt;/div&gt;&lt;div&gt;　解压极坐标加速度&lt;/div&gt;&lt;div&gt;　SetReplicatedAcceleration(UnpackedAcceleration)&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;SimulateMovement 保留 Lyra 复制的 Acceleration，避免父类模拟覆盖。&lt;/div&gt;" vertex="1">
+          <mxGeometry x="1840" y="-2590" width="480" height="500" as="geometry" />
+        </mxCell>
+        <mxCell id="flow-anim-eval" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;AnimInstance 本地求值：Locomotion&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;每个网络角色都在本机执行动画蓝图：&lt;/div&gt;&lt;div&gt;　Velocity → Speed / Direction&lt;/div&gt;&lt;div&gt;　Acceleration → 起步、刹车、倾斜、移动意图&lt;/div&gt;&lt;div&gt;　MovementMode → Grounded / Falling&lt;/div&gt;&lt;div&gt;　ActorRotation → Orientation Warping / 转向&lt;/div&gt;&lt;div&gt;　IsCrouched / JumpForce → 蹲伏与跳跃表现&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;ULyraAnimInstance::NativeUpdateAnimation 还从 LyraCharacterMovementComponent::GetGroundInfo 获取 GroundDistance。&lt;/div&gt;" vertex="1">
+          <mxGeometry x="2550" y="-2550" width="500" height="430" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-entry-owner" edge="1" parent="1" source="flow-entry" target="flow-move-owner" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=1;exitY=0.2;entryX=0;entryY=0.2;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-owner-server" edge="1" parent="1" source="flow-move-owner" target="flow-move-server" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-server-pre" edge="1" parent="1" source="flow-move-server" target="flow-pre-rep" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=1;exitY=0.35;entryX=0;entryY=0.35;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-pre-shared" edge="1" parent="1" source="flow-pre-rep" target="flow-shared-rep" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=1;exitY=0.45;entryX=0;entryY=0.45;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-shared-sim" edge="1" parent="1" source="flow-shared-rep" target="flow-sim-proxy" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-sim-anim" edge="1" parent="1" source="flow-sim-proxy" target="flow-anim-eval" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="flow-view" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;视角旋转同步链&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;ALyraPlayerController::Tick:&lt;/div&gt;&lt;div&gt;　IF HasAuthority OR TargetPawn-&amp;gt;IsLocallyControlled():&lt;/div&gt;&lt;div&gt;　　PlayerState-&amp;gt;SetReplicatedViewRotation(TargetPawn-&amp;gt;GetViewRotation())&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;ALyraPlayerState::SetReplicatedViewRotation:&lt;/div&gt;&lt;div&gt;　值变化时 MARK_PROPERTY_DIRTY&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;复制条件：COND_SkipOwner&lt;/div&gt;&lt;div&gt;原因：拥有者已有无延迟本地视角，只需把视角发给其他客户端。&lt;/div&gt;" vertex="1">
+          <mxGeometry x="-820" y="-1780" width="500" height="430" as="geometry" />
+        </mxCell>
+        <mxCell id="flow-view-anim" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;远端 Aim Offset / 观战视角&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;非本地控制的 TargetPawn：&lt;/div&gt;&lt;div&gt;　TargetViewRotation = TargetPawn-&amp;gt;PlayerState&lt;/div&gt;&lt;div&gt;　　　　　　　　　-&amp;gt;GetReplicatedViewRotation()&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;动画蓝图根据 ViewRotation 与 ActorRotation 的差值计算：&lt;/div&gt;&lt;div&gt;　AimYaw / AimPitch&lt;/div&gt;&lt;div&gt;　上半身瞄准偏移&lt;/div&gt;&lt;div&gt;　站立转向阈值&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;这条链同步的是“瞄准输入”，不是同步最终脊柱和手臂骨骼。&lt;/div&gt;" vertex="1">
+          <mxGeometry x="-40" y="-1780" width="480" height="430" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-entry-view" edge="1" parent="1" source="flow-entry" target="flow-view" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=1;exitY=0.48;entryX=0;entryY=0.35;">
+          <mxGeometry relative="1" width="160" as="geometry">
+            <Array as="points"><mxPoint x="-930" y="-1640" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-view-anim" edge="1" parent="1" source="flow-view" target="flow-view-anim" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="flow-asc" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;ASC / GameplayTag 状态同步链&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;Ability 激活、GameplayEffect 生效或属性变化&lt;/div&gt;&lt;div&gt;　→ ASC 更新 OwnedGameplayTags&lt;/div&gt;&lt;div&gt;　→ GAS 按复制模式同步必要状态&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;ULyraAbilitySystemComponent::InitAbilityActorInfo:&lt;/div&gt;&lt;div&gt;　取得 Avatar 的 ULyraAnimInstance&lt;/div&gt;&lt;div&gt;　调用 InitializeWithAbilitySystem(this)&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;ULyraAnimInstance::InitializeWithAbilitySystem:&lt;/div&gt;&lt;div&gt;　GameplayTagPropertyMap.Initialize(this, ASC)&lt;/div&gt;" vertex="1">
+          <mxGeometry x="700" y="-1800" width="500" height="470" as="geometry" />
+        </mxCell>
+        <mxCell id="flow-tag-anim" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;GameplayTagBlueprintPropertyMap&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;Tag 增加/移除时，映射的 AnimInstance 蓝图变量自动更新。&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;动画图不必每帧手工执行 HasMatchingGameplayTag：&lt;/div&gt;&lt;div&gt;　Tag → bool / int 变量&lt;/div&gt;&lt;div&gt;　变量 → State Machine / Blend / Layer 条件&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;典型用途：&lt;/div&gt;&lt;div&gt;　ADS、死亡、技能激活、移动停止、状态限制&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;结果仍由每个客户端的 AnimGraph 本地计算。&lt;/div&gt;" vertex="1">
+          <mxGeometry x="1440" y="-1780" width="460" height="430" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-entry-asc" edge="1" parent="1" source="flow-entry" target="flow-asc" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=1;exitY=0.7;entryX=0;entryY=0.35;">
+          <mxGeometry relative="1" width="160" as="geometry">
+            <Array as="points"><mxPoint x="540" y="-1640" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-asc-tag" edge="1" parent="1" source="flow-asc" target="flow-tag-anim" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="flow-ability" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;Gameplay Ability：启动动作&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;GA_Hero_Dash / GA_Melee 等 Ability：&lt;/div&gt;&lt;div&gt;　1. 本地预测激活时立即响应输入&lt;/div&gt;&lt;div&gt;　2. CommitAbility 由服务端确认成本与权限&lt;/div&gt;&lt;div&gt;　3. AbilityTask_PlayMontageAndWait 播放 Montage&lt;/div&gt;&lt;div&gt;　4. 等待 Completed / BlendOut / Interrupted / Cancelled&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;关键点：普通 AnimInstance::Montage_Play 只影响调用它的机器；要获得 GAS 的网络同步，应在可复制/可预测 Ability 中通过 ASC 播放。&lt;/div&gt;" vertex="1">
+          <mxGeometry x="-820" y="-1000" width="510" height="440" as="geometry" />
+        </mxCell>
+        <mxCell id="flow-montage-server" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;ASC：Montage 权威状态&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;UAbilitySystemComponent::PlayMontage:&lt;/div&gt;&lt;div&gt;　AnimInstance-&amp;gt;Montage_Play(...)&lt;/div&gt;&lt;div&gt;　记录 LocalAnimMontageInfo&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;服务端更新 RepAnimMontageInfo：&lt;/div&gt;&lt;div&gt;　Animation / PlayRate / Position&lt;/div&gt;&lt;div&gt;　Section / NextSection&lt;/div&gt;&lt;div&gt;　IsStopped / BlendTime&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;拥有者已预测播放；服务端结果用于确认或纠正。模拟代理依赖复制状态启动动作。&lt;/div&gt;" vertex="1">
+          <mxGeometry x="-40" y="-1000" width="470" height="440" as="geometry" />
+        </mxCell>
+        <mxCell id="flow-montage-proxy" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;OnRep_ReplicatedAnimMontage&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;模拟代理收到 RepAnimMontageInfo 后：&lt;/div&gt;&lt;div&gt;　1. 尚未播放该 Montage → 开始播放&lt;/div&gt;&lt;div&gt;　2. 同步 PlayRate&lt;/div&gt;&lt;div&gt;　3. 同步当前 Section / NextSection&lt;/div&gt;&lt;div&gt;　4. Position 偏差超过阈值 → 跳转或追赶&lt;/div&gt;&lt;div&gt;　5. 服务端已停止 → 按复制的 BlendTime 停止&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;网络不会保证两个客户端在每个渲染帧拥有完全相同的小数播放位置；目标是视觉上保持同一动作、Section 和合理相位。&lt;/div&gt;" vertex="1">
+          <mxGeometry x="700" y="-1000" width="500" height="440" as="geometry" />
+        </mxCell>
+        <mxCell id="flow-root-motion" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;Root Motion：位移仍由移动网络负责&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;Montage Root Motion：&lt;/div&gt;&lt;div&gt;　动画姿态提取 RootMotion&lt;/div&gt;&lt;div&gt;　CharacterMovement 将其转换为实际移动&lt;/div&gt;&lt;div&gt;　服务器保持最终位置权威&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;AbilityTask_ApplyRootMotion*：&lt;/div&gt;&lt;div&gt;　创建 RootMotionSource&lt;/div&gt;&lt;div&gt;　纳入 SavedMove / ServerMove 与修正流程&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;SimulatedTick 对网络 Root Motion Montage / RootMotionSource 使用服务器修正数据。不能仅靠“Montage 同步”保证角色位置正确。&lt;/div&gt;" vertex="1">
+          <mxGeometry x="1440" y="-1010" width="500" height="460" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-entry-ability" edge="1" parent="1" source="flow-entry" target="flow-ability" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=1;exitY=0.82;entryX=0;entryY=0.3;">
+          <mxGeometry relative="1" width="160" as="geometry">
+            <Array as="points"><mxPoint x="-940" y="-860" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-ability-montage" edge="1" parent="1" source="flow-ability" target="flow-montage-server" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-montage-proxy" edge="1" parent="1" source="flow-montage-server" target="flow-montage-proxy" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-proxy-root" edge="1" parent="1" source="flow-montage-proxy" target="flow-root-motion" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="flow-equipment" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;装备与 Linked Anim Layer&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;装备状态/武器实例与 CosmeticTags 在各端可用后：&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;ULyraWeaponInstance::PickBestAnimLayer(&lt;/div&gt;&lt;div&gt;　bEquipped, CosmeticTags)&lt;/div&gt;&lt;div&gt;{&lt;/div&gt;&lt;div&gt;　SetToQuery = bEquipped ? EquippedAnimSet : UneuippedAnimSet;&lt;/div&gt;&lt;div&gt;　return SetToQuery.SelectBestLayer(CosmeticTags);&lt;/div&gt;&lt;div&gt;}&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;选择 Unarmed / Pistol / Rifle / Shotgun 对应动画层。同步的是装备与选择条件，不是复制动画层每帧输出。&lt;/div&gt;" vertex="1">
+          <mxGeometry x="-820" y="-210" width="520" height="450" as="geometry" />
+        </mxCell>
+        <mxCell id="flow-final-pose" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;最终姿态组合（每台机器本地执行）&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;Base Locomotion Pose&lt;/div&gt;&lt;div&gt;　+ Linked Anim Layer（武器步态/持枪姿态）&lt;/div&gt;&lt;div&gt;　+ Aim Offset（复制视角或本地视角）&lt;/div&gt;&lt;div&gt;　+ GameplayTag 控制的 Blend / State&lt;/div&gt;&lt;div&gt;　+ Montage Slot（技能动作）&lt;/div&gt;&lt;div&gt;　+ Additive / IK / Post Process&lt;/div&gt;&lt;div&gt;　= Final Component Space Pose&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;结论：只要各端获得足够一致的动画输入，就能得到视觉一致但不要求逐骨骼字节一致的结果。&lt;/div&gt;" vertex="1">
+          <mxGeometry x="40" y="-210" width="510" height="450" as="geometry" />
+        </mxCell>
+        <mxCell id="flow-sync-groups" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;Sync Group / Sync Marker 的边界&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;FUNCTION AnimGraph_LocalEvaluation():&lt;/div&gt;&lt;div&gt;　1. 同一 Sync Group 选出 Leader&lt;/div&gt;&lt;div&gt;　2. Follower 按归一化时间或 Marker 对齐&lt;/div&gt;&lt;div&gt;　3. Walk ↔ Run Blend 时保持左右脚相位&lt;/div&gt;&lt;div&gt;　4. 只在当前 AnimInstance 的动画更新阶段生效&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;它不发送网络包，也不知道 Authority / AutonomousProxy / SimulatedProxy。跨网络的一致性来自前面的移动、视角、ASC 与 Montage 复制链。&lt;/div&gt;" vertex="1">
+          <mxGeometry x="890" y="-210" width="520" height="450" as="geometry" />
+        </mxCell>
+        <mxCell id="flow-notify-warning" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;fontColor=#000033;labelBackgroundColor=default;" value="&lt;div&gt;&lt;b&gt;动画通知与玩法逻辑注意事项&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;AnimNotify 会在实际播放该动画的机器上本地触发。&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;因此：&lt;/div&gt;&lt;div&gt;　视觉/音效：可用 GameplayCue 或本地 Notify&lt;/div&gt;&lt;div&gt;　伤害/弹药/命中判定：由服务端 Ability 逻辑负责&lt;/div&gt;&lt;div&gt;　预测事件：必须考虑预测键、重复触发与回滚&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;不要把“所有客户端都播放了 Montage”误认为“Notify 中的玩法逻辑天然只执行一次”。&lt;/div&gt;" vertex="1">
+          <mxGeometry x="1750" y="-210" width="510" height="450" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-entry-equipment" edge="1" parent="1" source="flow-entry" target="flow-equipment" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=1;exitY=0.95;entryX=0;entryY=0.3;">
+          <mxGeometry relative="1" width="160" as="geometry">
+            <Array as="points"><mxPoint x="-940" y="-80" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-equipment-final" edge="1" parent="1" source="flow-equipment" target="flow-final-pose" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-final-sync" edge="1" parent="1" source="flow-final-pose" target="flow-sync-groups" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-sync-notify" edge="1" parent="1" source="flow-sync-groups" target="flow-notify-warning" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-anim-final" edge="1" parent="1" source="flow-anim-eval" target="flow-final-pose" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=0.5;exitY=1;entryX=0.8;entryY=0;">
+          <mxGeometry relative="1" width="160" as="geometry">
+            <Array as="points"><mxPoint x="2800" y="-400" /><mxPoint x="450" y="-400" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-view-final" edge="1" parent="1" source="flow-view-anim" target="flow-final-pose" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=0.5;exitY=1;entryX=0.25;entryY=0;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-tag-final" edge="1" parent="1" source="flow-tag-anim" target="flow-final-pose" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=0.5;exitY=1;entryX=0.55;entryY=0;">
+          <mxGeometry relative="1" width="160" as="geometry">
+            <Array as="points"><mxPoint x="1670" y="-390" /><mxPoint x="320" y="-390" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-root-final" edge="1" parent="1" source="flow-root-motion" target="flow-final-pose" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=0.5;exitY=1;entryX=0.9;entryY=0;">
+          <mxGeometry relative="1" width="160" as="geometry">
+            <Array as="points"><mxPoint x="1690" y="-350" /><mxPoint x="500" y="-350" /></Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="ABP_Mannequin_Base跳跃逻辑" id="abp-mannequin-jump-flow">
+    <mxGraphModel dx="2860" dy="1840" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="jump-title" parent="1" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=24;fontStyle=1;" value="ABP_Mannequin_Base：跳跃与落地状态机逻辑" vertex="1">
+          <mxGeometry x="20" y="20" width="1050" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="jump-principle" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=14;" value="&lt;div&gt;&lt;b&gt;职责边界&lt;/b&gt;&lt;/div&gt;&lt;div&gt;ABP_Mannequin_Base 负责跳跃流程和过渡条件；Unarmed / Pistol / Rifle / Shotgun Linked Anim Layer 提供每个阶段真正播放的动画序列。&lt;/div&gt;&lt;div&gt;跳跃不是依靠 Montage RPC 进入状态，而是每台机器根据 CharacterMovement 的 MovementMode、Velocity、IsMovingOnGround 和 GroundDistance 本地计算。&lt;/div&gt;" vertex="1">
+          <mxGeometry x="20" y="90" width="1050" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="jump-update-data" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;UpdateCharacterStateData / UpdateJumpFallData&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;Movement = GetMovementComponent()&lt;/div&gt;&lt;div&gt;WorldVelocity = TryGetPawnOwner()-&amp;gt;GetVelocity()&lt;/div&gt;&lt;div&gt;IsOnGround = Movement-&amp;gt;IsMovingOnGround()&lt;/div&gt;&lt;div&gt;IsFalling = Movement-&amp;gt;MovementMode == MOVE_Falling&lt;/div&gt;&lt;div&gt;IsJumping = IsFalling AND WorldVelocity.Z &amp;gt; 0&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;IF IsJumping:&lt;/div&gt;&lt;div&gt;　TimeToJumpApex = -WorldVelocity.Z / GravityZ&lt;/div&gt;&lt;div&gt;ELSE:&lt;/div&gt;&lt;div&gt;　TimeToJumpApex ≤ 0，表示已到顶点或开始下降&lt;/div&gt;" vertex="1">
+          <mxGeometry x="20" y="290" width="490" height="410" as="geometry" />
+        </mxCell>
+        <mxCell id="jump-ground-info" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;ULyraAnimInstance::NativeUpdateAnimation&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;Character = Cast&lt;ALyraCharacter&gt;(GetOwningActor())&lt;/div&gt;&lt;div&gt;MoveComp = Character-&amp;gt;GetCharacterMovement()&lt;/div&gt;&lt;div&gt;GroundInfo = MoveComp-&amp;gt;GetGroundInfo()&lt;/div&gt;&lt;div&gt;GroundDistance = GroundInfo.GroundDistance&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;Walking：GroundDistance = 0&lt;/div&gt;&lt;div&gt;Falling：从胶囊体向下 Trace，得到距地高度&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;用途：空中阶段、落地预判和落地姿态混合。真正“已落地”仍以 CharacterMovement 的地面状态为准。&lt;/div&gt;" vertex="1">
+          <mxGeometry x="600" y="290" width="480" height="410" as="geometry" />
+        </mxCell>
+        <mxCell id="jump-network-input" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;网络角色为什么能进入相同阶段&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;Autonomous Proxy：使用本地预测的 MovementMode / Velocity，立即进入跳跃。&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;Authority：执行权威移动并确定真实落地时刻。&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;Simulated Proxy：通过 ReplicatedMovement / FastSharedReplication 得到 Velocity、MovementMode、JumpForce、Crouch，再本地运行同一 AnimGraph。&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;网络复制的是状态机输入，不是 FullBody_JumpApexState 这样的状态编号。&lt;/div&gt;" vertex="1">
+          <mxGeometry x="1170" y="290" width="480" height="410" as="geometry" />
+        </mxCell>
+        <mxCell id="jump-edge-data-ground" edge="1" parent="1" source="jump-update-data" target="jump-ground-info" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="jump-edge-ground-network" edge="1" parent="1" source="jump-ground-info" target="jump-network-input" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="jump-ground-states" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;地面 Locomotion States&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;Idle&lt;/div&gt;&lt;div&gt;Start&lt;/div&gt;&lt;div&gt;Cycle&lt;/div&gt;&lt;div&gt;Pivot&lt;/div&gt;&lt;div&gt;Stop&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;这些状态不分别连接跳跃过渡，而是通过 State Alias 汇聚。&lt;/div&gt;" vertex="1">
+          <mxGeometry x="20" y="830" width="280" height="310" as="geometry" />
+        </mxCell>
+        <mxCell id="jump-alias" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;JumpFallInterruptSources&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;State Alias：让多个地面状态复用同一个离地条件。&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;Can Enter Transition：&lt;/div&gt;&lt;div&gt;　!IsOnGround&lt;/div&gt;&lt;div&gt;　或 IsFalling&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;解决：从 Idle、奔跑、Pivot、Stop 等任意状态都能统一进入空中流程。&lt;/div&gt;" vertex="1">
+          <mxGeometry x="390" y="830" width="320" height="310" as="geometry" />
+        </mxCell>
+        <mxCell id="jump-selector" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;JumpSelector / EndInAir&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;离开地面后判断当前是“主动起跳上升”还是“已经处于坠落”。&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;IF IsJumping:&lt;/div&gt;&lt;div&gt;　进入 JumpStart&lt;/div&gt;&lt;div&gt;ELSE:&lt;/div&gt;&lt;div&gt;　直接进入 FallLoop&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;走下悬崖、出生在空中或修正后已下降时，会跳过蹬地动画。&lt;/div&gt;" vertex="1">
+          <mxGeometry x="800" y="830" width="350" height="310" as="geometry" />
+        </mxCell>
+        <mxCell id="jump-edge-ground-alias" edge="1" parent="1" source="jump-ground-states" target="jump-alias" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="jump-edge-alias-selector" edge="1" parent="1" source="jump-alias" target="jump-selector" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="jump-start" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;JumpStart&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;播放一次起跳动作：&lt;/div&gt;&lt;div&gt;　MM_*_Jump_Start&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;表现脚蹬地、身体展开。该状态本身不决定角色位移；实际垂直速度来自 CharacterMovement::DoJump。&lt;/div&gt;" vertex="1">
+          <mxGeometry x="1250" y="790" width="300" height="280" as="geometry" />
+        </mxCell>
+        <mxCell id="jump-start-loop" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;JumpStartLoop&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;当 JumpStart 播放完但角色仍持续上升时进入循环：&lt;/div&gt;&lt;div&gt;　MM_*_Jump_Start_Loop&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;适配长按跳跃、较高 JumpZVelocity、外力上抛以及网络修正造成的上升时间变化。&lt;/div&gt;" vertex="1">
+          <mxGeometry x="1660" y="790" width="320" height="280" as="geometry" />
+        </mxCell>
+        <mxCell id="jump-apex" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;JumpApex&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;使用 TimeToJumpApex 提前切换：&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;IF TimeToJumpApex ≤ ApexThreshold:&lt;/div&gt;&lt;div&gt;　进入 JumpApex&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;播放 MM_*_Jump_Apex，让收腿和身体姿态在物理最高点附近对齐，而不是等 Velocity.Z 已变负才开始。&lt;/div&gt;" vertex="1">
+          <mxGeometry x="2090" y="790" width="340" height="280" as="geometry" />
+        </mxCell>
+        <mxCell id="jump-fall-loop" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;FallLoop&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;进入条件：&lt;/div&gt;&lt;div&gt;　IsFalling&lt;/div&gt;&lt;div&gt;　WorldVelocity.Z ≤ 0&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;循环播放 MM_*_Jump_Fall_Loop，直到 CharacterMovement 报告真正落地。&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;JumpSelector 的“直接坠落”分支也会进入这里。&lt;/div&gt;" vertex="1">
+          <mxGeometry x="2540" y="790" width="330" height="300" as="geometry" />
+        </mxCell>
+        <mxCell id="jump-fall-land" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;FallLand&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;IF IsOnGround:&lt;/div&gt;&lt;div&gt;　进入 FallLand&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;播放 MM_*_Jump_Fall_Land。&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;动画中的 TransitionToLocomotion AnimNotifyState 标记“可以恢复移动”的时间窗，避免必须等待整段落地动画结束。&lt;/div&gt;" vertex="1">
+          <mxGeometry x="2980" y="790" width="350" height="300" as="geometry" />
+        </mxCell>
+        <mxCell id="jump-edge-selector-start" edge="1" parent="1" source="jump-selector" target="jump-start" value="IsJumping" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=1;exitY=0.35;entryX=0;entryY=0.35;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="jump-edge-start-loop" edge="1" parent="1" source="jump-start" target="jump-start-loop" value="仍在上升" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="jump-edge-loop-apex" edge="1" parent="1" source="jump-start-loop" target="jump-apex" value="TimeToJumpApex" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="jump-edge-apex-fall" edge="1" parent="1" source="jump-apex" target="jump-fall-loop" value="开始下降" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="jump-edge-fall-land" edge="1" parent="1" source="jump-fall-loop" target="jump-fall-land" value="IsOnGround" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="jump-edge-selector-fall" edge="1" parent="1" source="jump-selector" target="jump-fall-loop" value="!IsJumping：走下悬崖 / 已下降" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=0.5;exitY=1;entryX=0.15;entryY=1;">
+          <mxGeometry relative="1" width="160" as="geometry">
+            <Array as="points"><mxPoint x="975" y="1210" /><mxPoint x="2590" y="1210" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="jump-return-locomotion" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;返回 Locomotion&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;FallLand 的过渡规则检查：&lt;/div&gt;&lt;div&gt;　WasAnimNotifyStateActiveInSourceState&lt;/div&gt;&lt;div&gt;　(TransitionToLocomotion)&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;Notify 激活后按当前输入进入 Idle / Start / Cycle，落地剩余动作可通过 Jump Recovery Additive 保留。&lt;/div&gt;" vertex="1">
+          <mxGeometry x="2980" y="1270" width="350" height="300" as="geometry" />
+        </mxCell>
+        <mxCell id="jump-edge-land-return" edge="1" parent="1" source="jump-fall-land" target="jump-return-locomotion" value="TransitionToLocomotion" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="jump-linked-layers" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;Linked Anim Layer 提供动作资产&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;ABP_UnarmedAnimLayers&lt;/div&gt;&lt;div&gt;ABP_PistolAnimLayers&lt;/div&gt;&lt;div&gt;ABP_RifleAnimLayers&lt;/div&gt;&lt;div&gt;ABP_ShotgunAnimLayers&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;每层分别实现：&lt;/div&gt;&lt;div&gt;　JumpStart&lt;/div&gt;&lt;div&gt;　JumpStartLoop&lt;/div&gt;&lt;div&gt;　JumpApex&lt;/div&gt;&lt;div&gt;　FallLoop&lt;/div&gt;&lt;div&gt;　FallLand&lt;/div&gt;&lt;div&gt;　JumpRecoveryAdditive&lt;/div&gt;" vertex="1">
+          <mxGeometry x="1250" y="1280" width="360" height="360" as="geometry" />
+        </mxCell>
+        <mxCell id="jump-state-functions" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;" value="&lt;div&gt;&lt;b&gt;Base 中对应的 State Node Functions&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;FullBody_JumpStartState&lt;/div&gt;&lt;div&gt;FullBody_JumpStartLoopState&lt;/div&gt;&lt;div&gt;FullBody_JumpApexState&lt;/div&gt;&lt;div&gt;FullBody_FallLoopState&lt;/div&gt;&lt;div&gt;FullBody_FallLandState&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;这些函数负责状态进入/更新时的 FullBody 组合逻辑；动作选择仍通过 ALI_ItemAnimLayers 解耦。&lt;/div&gt;" vertex="1">
+          <mxGeometry x="1780" y="1280" width="400" height="360" as="geometry" />
+        </mxCell>
+        <mxCell id="jump-important-boundary" parent="1" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;fontColor=#000033;labelBackgroundColor=default;" value="&lt;div&gt;&lt;b&gt;关键理解&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;1. CharacterMovement 决定角色是否真的起跳、下落和落地。&lt;/div&gt;&lt;div&gt;2. AnimBP 只选择与物理阶段匹配的视觉姿态。&lt;/div&gt;&lt;div&gt;3. TimeToJumpApex 用来提前对齐顶点动作，不改变物理轨迹。&lt;/div&gt;&lt;div&gt;4. GroundDistance 可用于预判，但 IsOnGround 才是落地状态切换的权威输入。&lt;/div&gt;&lt;div&gt;5. State Alias 让任意地面状态都能共享同一条离地规则。&lt;/div&gt;&lt;div&gt;6. TransitionToLocomotion Notify 决定视觉上何时解除落地动作。&lt;/div&gt;" vertex="1">
+          <mxGeometry x="2310" y="1280" width="480" height="360" as="geometry" />
+        </mxCell>
+        <mxCell id="jump-edge-layer-functions" edge="1" parent="1" source="jump-linked-layers" target="jump-state-functions" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+        <mxCell id="jump-edge-functions-boundary" edge="1" parent="1" source="jump-state-functions" target="jump-important-boundary" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;fontFamily=Helvetica;fontSize=12;fontStyle=1;horizontal=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry relative="1" width="160" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
